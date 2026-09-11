@@ -1,41 +1,41 @@
 package com.example.zelo
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
+import androidx.activity.viewModels
+import androidx.compose.runtime.getValue
+import com.example.zelo.ui.home.InicioScreen
 import com.example.zelo.ui.theme.ZeloTheme
+import com.example.zelo.viewmodel.InicioViewModel
 
 class MainActivity : ComponentActivity() {
+
+    private val viewModel: InicioViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         enableEdgeToEdge()
+
         setContent {
             ZeloTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Zelo",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+                val uiState by viewModel.uiState
+
+                InicioScreen(
+                    uiState = uiState,
+                    onAbrirAgenda = {
+                        val intent = Intent(
+                            this,
+                            AgendaActivity::class.java
+                        )
+
+                        startActivity(intent)
+                    }
+                )
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Box(modifier = modifier.fillMaxSize()) {
-        Text(
-            text = "Bem-vindo ao $name!",
-            modifier = Modifier.align(androidx.compose.ui.Alignment.Center)
-        )
     }
 }
