@@ -1,3 +1,13 @@
 <resources>
     <string name="app_name">Zelo</string>
+    <string name="titulo_agenda">Agenda</string>
+    <string name="data_inicial_agenda">11/09/2026</string>
+    <string name="agendar_nova_consulta">Agendar nova consulta</string>
+    <string name="titulo_novo_agendamento">Novo agendamento</string>
+    <string name="subtitulo_novo_agendamento">Informe os dados da consulta</string>
+    <string name="nome_pet">Nome do pet</string>
+    <string name="data_agendamento">Data — DD/MM/AAAA</string>
+    <string name="horario_agendamento">Horário — HH:MM</string>
+    <string name="descricao_agendamento">Descrição da consulta</string>
+    <string name="salvar_agendamento">Salvar agendamento</string>
 </resources>
