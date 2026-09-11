@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/zelo_background"
     android:fillViewport="true"
     tools:context=".NovoAgendamentoActivity">
 
@@ -12,66 +14,145 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="24dp">
+        android:padding="20dp">
 
-        <TextView
-            android:id="@+id/txtTituloNovoAgendamento"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/titulo_novo_agendamento"
-            android:textSize="28sp"
-            android:textStyle="bold" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnVoltar"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:minWidth="0dp"
+                android:padding="0dp"
+                android:text="‹"
+                android:textColor="@color/zelo_text"
+                android:textSize="26sp"
+                app:backgroundTint="@android:color/transparent" />
+
+            <TextView
+                android:id="@+id/txtTituloNovoAgendamento"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:text="@string/titulo_novo_agendamento"
+                android:textColor="@color/zelo_text"
+                android:textSize="26sp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:text="@string/subtitulo_novo_agendamento"
-            android:textSize="16sp" />
+            android:textColor="@color/zelo_text_secondary"
+            android:textSize="15sp" />
 
-        <EditText
-            android:id="@+id/edtNomePet"
+        <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="32dp"
             android:hint="@string/nome_pet"
-            android:inputType="textCapWords"
-            android:maxLines="1" />
+            app:boxBackgroundColor="@color/zelo_surface"
+            app:boxCornerRadiusBottomEnd="16dp"
+            app:boxCornerRadiusBottomStart="16dp"
+            app:boxCornerRadiusTopEnd="16dp"
+            app:boxCornerRadiusTopStart="16dp"
+            app:boxStrokeColor="@color/zelo_primary"
+            app:boxStrokeWidth="1dp"
+            app:boxStrokeWidthFocused="2dp">
 
-        <EditText
-            android:id="@+id/edtData"
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edtNomePet"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textCapWords"
+                android:maxLines="1" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="14dp"
             android:hint="@string/data_agendamento"
-            android:inputType="date"
-            android:maxLines="1" />
+            app:boxBackgroundColor="@color/zelo_surface"
+            app:boxCornerRadiusBottomEnd="16dp"
+            app:boxCornerRadiusBottomStart="16dp"
+            app:boxCornerRadiusTopEnd="16dp"
+            app:boxCornerRadiusTopStart="16dp"
+            app:boxStrokeColor="@color/zelo_primary">
 
-        <EditText
-            android:id="@+id/edtHorario"
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edtData"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clickable="true"
+                android:cursorVisible="false"
+                android:focusable="false" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="14dp"
             android:hint="@string/horario_agendamento"
-            android:inputType="time"
-            android:maxLines="1" />
+            app:boxBackgroundColor="@color/zelo_surface"
+            app:boxCornerRadiusBottomEnd="16dp"
+            app:boxCornerRadiusBottomStart="16dp"
+            app:boxCornerRadiusTopEnd="16dp"
+            app:boxCornerRadiusTopStart="16dp"
+            app:boxStrokeColor="@color/zelo_primary">
 
-        <EditText
-            android:id="@+id/edtDescricao"
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edtHorario"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clickable="true"
+                android:cursorVisible="false"
+                android:focusable="false" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
-            android:layout_height="120dp"
-            android:layout_marginTop="16dp"
-            android:gravity="top|start"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
             android:hint="@string/descricao_agendamento"
-            android:inputType="textCapSentences|textMultiLine"
-            android:padding="12dp" />
+            app:boxBackgroundColor="@color/zelo_surface"
+            app:boxCornerRadiusBottomEnd="16dp"
+            app:boxCornerRadiusBottomStart="16dp"
+            app:boxCornerRadiusTopEnd="16dp"
+            app:boxCornerRadiusTopStart="16dp"
+            app:boxStrokeColor="@color/zelo_primary">
 
-        <Button
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edtDescricao"
+                android:layout_width="match_parent"
+                android:layout_height="120dp"
+                android:gravity="top|start"
+                android:inputType="textCapSentences|textMultiLine"
+                android:minLines="4" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnSalvar"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="56dp"
             android:layout_marginTop="24dp"
-            android:text="@string/salvar_agendamento" />
+            android:text="@string/salvar_agendamento"
+            android:textColor="@color/white"
+            android:textStyle="bold"
+            app:backgroundTint="@color/zelo_primary"
+            app:cornerRadius="16dp" />
 
     </LinearLayout>
 

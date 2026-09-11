@@ -10,16 +10,20 @@ class AgendaViewModel : ViewModel() {
 
     private val model = AgendaModel()
 
-    private val _agendamentos = MutableLiveData<List<Agendamento>>()
+    private val _agendamentos =
+        MutableLiveData<List<Agendamento>>()
+
     val agendamentos: LiveData<List<Agendamento>>
         get() = _agendamentos
 
-    private val _dataSelecionada = MutableLiveData("15/09/2026")
+    private val _dataSelecionada =
+        MutableLiveData("10/09/2026")
+
     val dataSelecionada: LiveData<String>
         get() = _dataSelecionada
 
     init {
-        carregarAgendamentos("15/09/2026")
+        carregarAgendamentos("10/09/2026")
     }
 
     fun carregarAgendamentos(data: String) {
@@ -27,7 +31,15 @@ class AgendaViewModel : ViewModel() {
         _agendamentos.value = model.listarPorData(data)
     }
 
-    fun adicionarAgendamento(agendamento: Agendamento) {
-        _agendamentos.value = model.adicionar(agendamento)
+    fun adicionarAgendamento(
+        agendamento: Agendamento
+    ) {
+        model.adicionar(agendamento)
+
+        val dataAtual =
+            _dataSelecionada.value ?: agendamento.data
+
+        _agendamentos.value =
+            model.listarPorData(dataAtual)
     }
 }

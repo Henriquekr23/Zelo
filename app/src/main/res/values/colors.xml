@@ -2,4 +2,12 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="zelo_primary">#CB6440</color>
+    <color name="zelo_background">#FCF8F3</color>
+    <color name="zelo_surface">#FFFBF8</color>
+    <color name="zelo_text">#291F18</color>
+    <color name="zelo_text_secondary">#72665E</color>
+    <color name="zelo_outline">#E9E4DE</color>
+    <color name="zelo_sage">#C4E1C4</color>
+    <color name="zelo_sage_text">#254326</color>
 </resources>
