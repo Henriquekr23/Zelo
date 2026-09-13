@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/zelo_background"
+    android:padding="20dp"
+    tools:context=".AgendaActivity">
+
+    <TextView
+        android:id="@+id/txtTituloAgenda"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/titulo_agenda"
+        android:textColor="@color/zelo_text"
+        android:textSize="28sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnAdicionarRapido"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:minWidth="0dp"
+        android:minHeight="0dp"
+        android:padding="0dp"
+        android:gravity="center"
+        android:insetTop="0dp"
+        android:insetBottom="0dp"
+        android:text="+"
+        android:textAllCaps="false"
+        android:textColor="@color/white"
+        android:textSize="26sp"
+        app:backgroundTint="@color/zelo_primary"
+        app:cornerRadius="14dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/txtMesAtual"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="Setembro 2026"
+        android:textColor="@color/zelo_text"
+        android:textSize="17sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/txtTituloAgenda" />
+
+    <LinearLayout
+        android:id="@+id/layoutNavegacaoSemana"
+        android:layout_width="0dp"
+        android:layout_height="72dp"
+        android:layout_marginTop="8dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/txtMesAtual">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSemanaAnterior"
+            android:layout_width="40dp"
+            android:layout_height="48dp"
+            android:minWidth="0dp"
+            android:padding="0dp"
+            android:text="‹"
+            android:textColor="@color/zelo_text_secondary"
+            android:textSize="26sp"
+            app:backgroundTint="@android:color/transparent" />
+
+        <HorizontalScrollView
+            android:id="@+id/scrollCalendario"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:fillViewport="false"
+            android:overScrollMode="never"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:id="@+id/layoutDias"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:orientation="horizontal" />
+
+        </HorizontalScrollView>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnProximaSemana"
+            android:layout_width="40dp"
+            android:layout_height="48dp"
+            android:minWidth="0dp"
+            android:padding="0dp"
+            android:text="›"
+            android:textColor="@color/zelo_text_secondary"
+            android:textSize="26sp"
+            app:backgroundTint="@android:color/transparent" />
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/txtDataSelecionada"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="QUINTA, 10 DE SETEMBRO"
+        android:textColor="@color/zelo_text_secondary"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toStartOf="@id/txtQuantidade"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/layoutNavegacaoSemana" />
+
+    <TextView
+        android:id="@+id/txtQuantidade"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="1 agendamento"
+        android:textColor="@color/zelo_primary"
+        android:textSize="13sp"
+        app:layout_constraintBaseline_toBaselineOf="@id/txtDataSelecionada"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <ListView
+        android:id="@+id/listViewAgendamentos"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginBottom="16dp"
+        android:clipToPadding="false"
+        android:divider="@null"
+        android:dividerHeight="12dp"
+        app:layout_constraintBottom_toTopOf="@id/btnNovoAgendamento"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/txtDataSelecionada"
+        tools:listitem="@layout/item_agendamento" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnNovoAgendamento"
+        android:layout_width="0dp"
+        android:layout_height="56dp"
+        android:text="@string/agendar_nova_consulta"
+        android:textColor="@color/white"
+        android:textStyle="bold"
+        app:backgroundTint="@color/zelo_primary"
+        app:cornerRadius="16dp"
+        app:icon="@android:drawable/ic_input_add"
+        app:iconGravity="textStart"
+        app:iconTint="@color/white"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

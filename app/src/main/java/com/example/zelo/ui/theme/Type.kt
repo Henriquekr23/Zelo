@@ -9,19 +9,9 @@ import androidx.compose.ui.unit.sp
 import com.example.zelo.R
 
 // Nota: Coloque os arquivos .ttf em res/font/ (Source Serif 4 e Plus Jakarta Sans)
-val SourceSerif4 = FontFamily(
-    // Font(R.font.source_serif_4_medium, FontWeight.Medium),
-    // Font(R.font.source_serif_4_semibold, FontWeight.SemiBold),
-    FontFamily.Serif.fontFamily.first() // Fallback enquanto não há arquivos de fonte
-)
+val SourceSerif4 = FontFamily.Serif
 
-val PlusJakartaSans = FontFamily(
-    // Font(R.font.plus_jakarta_sans_regular, FontWeight.Normal),
-    // Font(R.font.plus_jakarta_sans_medium, FontWeight.Medium),
-    // Font(R.font.plus_jakarta_sans_semibold, FontWeight.SemiBold),
-    // Font(R.font.plus_jakarta_sans_bold, FontWeight.Bold),
-    FontFamily.SansSerif.fontFamily.first() // Fallback enquanto não há arquivos de fonte
-)
+val PlusJakartaSans = FontFamily.SansSerif
 
 val ZeloTypography = Typography(
     titleLarge = TextStyle(
