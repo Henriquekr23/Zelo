@@ -79,7 +79,8 @@ class MainActivity : ComponentActivity() {
                         when (telaAtual) {
                             "inicio" -> InicioScreen(
                                 uiState = uiState,
-                                onAbrirAgenda = { startActivity(Intent(this@MainActivity, AgendaActivity::class.java)) }
+                                onAbrirAgenda = { startActivity(Intent(this@MainActivity, AgendaActivity::class.java)) },
+                                onNavegarParaTela = { tela -> telaAtual = tela }
                             )
 
                             "perfil" -> PerfilScreen()
