@@ -27,16 +27,21 @@ class MainActivity : ComponentActivity() {
 
     private val viewModel: InicioViewModel by viewModels()
     private val historicoViewModel: HistoricoViewModel by viewModels()
+    private val _telaAtual = mutableStateOf("inicio")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        intent.getStringExtra("TELA")?.let {
+            _telaAtual.value = it
+        }
+
         enableEdgeToEdge()
         setContent {
             ZeloTheme {
                 val uiState by viewModel.uiState
                 val historicoUiState by historicoViewModel.uiState
-
-                var telaAtual by remember { mutableStateOf("inicio") }
+                val telaAtual by _telaAtual
 
                 Scaffold(
                     bottomBar = {
@@ -45,7 +50,7 @@ class MainActivity : ComponentActivity() {
                                 icon = { Icon(Icons.Default.Home, contentDescription = "Início") },
                                 label = { Text("Início") },
                                 selected = telaAtual == "inicio",
-                                onClick = { telaAtual = "inicio" },
+                                onClick = { _telaAtual.value = "inicio" },
                                 colors = NavigationBarItemDefaults.colors(indicatorColor = MaterialTheme.colorScheme.secondaryContainer)
                             )
                             NavigationBarItem(
@@ -61,14 +66,14 @@ class MainActivity : ComponentActivity() {
                                 icon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = "Histórico") },
                                 label = { Text("Histórico") },
                                 selected = telaAtual == "historico",
-                                onClick = { telaAtual = "historico" },
+                                onClick = { _telaAtual.value = "historico" },
                                 colors = NavigationBarItemDefaults.colors(indicatorColor = MaterialTheme.colorScheme.secondaryContainer)
                             )
                             NavigationBarItem(
                                 icon = { Icon(Icons.Default.Person, contentDescription = "Perfil") },
                                 label = { Text("Perfil") },
                                 selected = telaAtual == "perfil",
-                                onClick = { telaAtual = "perfil" },
+                                onClick = { _telaAtual.value = "perfil" },
                                 colors = NavigationBarItemDefaults.colors(indicatorColor = MaterialTheme.colorScheme.secondaryContainer)
                             )
                         }
@@ -80,7 +85,7 @@ class MainActivity : ComponentActivity() {
                             "inicio" -> InicioScreen(
                                 uiState = uiState,
                                 onAbrirAgenda = { startActivity(Intent(this@MainActivity, AgendaActivity::class.java)) },
-                                onNavegarParaTela = { tela -> telaAtual = tela }
+                                onNavegarParaTela = { tela -> _telaAtual.value = tela }
                             )
 
                             "perfil" -> PerfilScreen()
@@ -90,6 +95,14 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        intent.getStringExtra("TELA")?.let {
+            _telaAtual.value = it
         }
     }
 }

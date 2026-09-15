@@ -10,6 +10,18 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.Text
+import com.example.zelo.ui.theme.ZeloTheme
 import com.example.zelo.adapter.AgendaAdapter
 import com.example.zelo.databinding.ActivityAgendaBinding
 import com.example.zelo.model.Agendamento
@@ -95,6 +107,51 @@ class AgendaActivity : AppCompatActivity() {
 
         configurarEventos()
         configurarObservadores()
+        configurarBarraNavegacao()
+    }
+
+    private fun configurarBarraNavegacao() {
+        binding.composeViewBottomNav.setContent {
+            ZeloTheme {
+                NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
+                    NavigationBarItem(
+                        icon = { Icon(Icons.Default.Home, contentDescription = "Início") },
+                        label = { Text("Início") },
+                        selected = false,
+                        onClick = { navegarParaTela("inicio") },
+                        colors = NavigationBarItemDefaults.colors(indicatorColor = MaterialTheme.colorScheme.secondaryContainer)
+                    )
+                    NavigationBarItem(
+                        icon = { Icon(Icons.Default.DateRange, contentDescription = "Agenda") },
+                        label = { Text("Agenda") },
+                        selected = true,
+                        onClick = { /* Já estamos na agenda */ }
+                    )
+                    NavigationBarItem(
+                        icon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = "Histórico") },
+                        label = { Text("Histórico") },
+                        selected = false,
+                        onClick = { navegarParaTela("historico") },
+                        colors = NavigationBarItemDefaults.colors(indicatorColor = MaterialTheme.colorScheme.secondaryContainer)
+                    )
+                    NavigationBarItem(
+                        icon = { Icon(Icons.Default.Person, contentDescription = "Perfil") },
+                        label = { Text("Perfil") },
+                        selected = false,
+                        onClick = { navegarParaTela("perfil") },
+                        colors = NavigationBarItemDefaults.colors(indicatorColor = MaterialTheme.colorScheme.secondaryContainer)
+                    )
+                }
+            }
+        }
+    }
+
+    private fun navegarParaTela(tela: String) {
+        val intent = Intent(this, MainActivity::class.java)
+        intent.putExtra("TELA", tela)
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        startActivity(intent)
+        finish()
     }
 
     private fun configurarObservadores() {
@@ -123,10 +180,6 @@ class AgendaActivity : AppCompatActivity() {
 
     private fun configurarEventos() {
         binding.btnNovoAgendamento.setOnClickListener {
-            abrirNovoAgendamento()
-        }
-
-        binding.btnAdicionarRapido.setOnClickListener {
             abrirNovoAgendamento()
         }
 
