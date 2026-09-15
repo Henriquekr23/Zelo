@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.animation.*
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -147,49 +148,68 @@ class MainActivity : ComponentActivity() {
                             bottom = innerPadding.calculateBottomPadding()
                         )
                     ) {
-                        when (telaAtual) {
+                        val screenOrder = listOf("inicio", "lembretes", "agenda", "historico", "perfil")
 
-                            "inicio" -> InicioScreen(
-                                uiState = uiState,
-                                onAbrirAgenda = {
-                                    startActivity(
-                                        Intent(
-                                            this@MainActivity,
-                                            AgendaActivity::class.java
-                                        )
-                                    )
-                                },
-                                onAbrirMeusPets = {
-                                    startActivity(
-                                        Intent(
-                                            this@MainActivity,
-                                            MeusPetsActivity::class.java
-                                        )
-                                    )
-                                },
-                                onNavegarParaTela = { tela ->
-                                    _telaAtual.value = tela
+                        AnimatedContent(
+                            targetState = telaAtual,
+                            transitionSpec = {
+                                val initialIndex = screenOrder.indexOf(initialState).takeIf { it != -1 } ?: 0
+                                val targetIndex = screenOrder.indexOf(targetState).takeIf { it != -1 } ?: 0
+
+                                if (targetIndex > initialIndex) {
+                                    (slideInHorizontally { it } + fadeIn())
+                                        .togetherWith(slideOutHorizontally { -it } + fadeOut())
+                                } else {
+                                    (slideInHorizontally { -it } + fadeIn())
+                                        .togetherWith(slideOutHorizontally { it } + fadeOut())
                                 }
-                            )
+                            },
+                            label = "MainContentTransition"
+                        ) { targetTela ->
+                            when (targetTela) {
 
-                            "historico" -> HistoricoScreen(
-                                uiState = historicoUiState
-                            )
-
-                            "lembretes" -> LembretesScreen(
-                                uiState = lembretesUiState
-                            )
-
-                            "perfil" -> PerfilScreen(
-                                onAbrirMeusPets = {
-                                    startActivity(
-                                        Intent(
-                                            this@MainActivity,
-                                            MeusPetsActivity::class.java
+                                "inicio" -> InicioScreen(
+                                    uiState = uiState,
+                                    onAbrirAgenda = {
+                                        startActivity(
+                                            Intent(
+                                                this@MainActivity,
+                                                AgendaActivity::class.java
+                                            )
                                         )
-                                    )
-                                }
-                            )
+                                    },
+                                    onAbrirMeusPets = {
+                                        startActivity(
+                                            Intent(
+                                                this@MainActivity,
+                                                MeusPetsActivity::class.java
+                                            )
+                                        )
+                                    },
+                                    onNavegarParaTela = { tela ->
+                                        _telaAtual.value = tela
+                                    }
+                                )
+
+                                "historico" -> HistoricoScreen(
+                                    uiState = historicoUiState
+                                )
+
+                                "lembretes" -> LembretesScreen(
+                                    uiState = lembretesUiState
+                                )
+
+                                "perfil" -> PerfilScreen(
+                                    onAbrirMeusPets = {
+                                        startActivity(
+                                            Intent(
+                                                this@MainActivity,
+                                                MeusPetsActivity::class.java
+                                            )
+                                        )
+                                    }
+                                )
+                            }
                         }
                     }
                 }
