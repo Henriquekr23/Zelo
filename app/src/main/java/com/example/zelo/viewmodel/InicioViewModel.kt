@@ -11,6 +11,7 @@ import com.example.zelo.model.Tutor
 data class InicioUiState(
     val tutor: Tutor,
     val petAtivo: Pet,
+    val todosPets: List<Pet>,
     val proximoLembrete: Procedimento?,
     val proximosCuidados: List<Procedimento>
 )
@@ -30,6 +31,7 @@ class InicioViewModel : ViewModel() {
         return InicioUiState(
             tutor = model.buscarTutorAtual(),
             petAtivo = pet,
+            todosPets = model.todosPets,
             proximoLembrete =
                 model.buscarProximoLembrete(pet.id),
             proximosCuidados =
@@ -37,6 +39,14 @@ class InicioViewModel : ViewModel() {
                     petId = pet.id,
                     limite = 3
                 )
+        )
+    }
+
+    fun selecionarPet(pet: Pet) {
+        _uiState.value = _uiState.value.copy(
+            petAtivo = pet,
+            proximoLembrete = model.buscarProximoLembrete(pet.id),
+            proximosCuidados = model.buscarProximosCuidados(petId = pet.id, limite = 3)
         )
     }
 }

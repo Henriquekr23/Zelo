@@ -29,24 +29,40 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.zelo.model.Procedimento
 import com.example.zelo.model.TipoProcedimento
 import com.example.zelo.ui.theme.WarningContainer
 import com.example.zelo.viewmodel.InicioUiState
+
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import com.example.zelo.model.Pet
 
 @Composable
 fun InicioScreen(
     uiState: InicioUiState,
     onAbrirAgenda: () -> Unit,
     onAbrirMeusPets: () -> Unit,
-    onNavegarParaTela: (String) -> Unit
+    onNavegarParaTela: (String) -> Unit,
+    onSelecionarPet: (Pet) -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        CabecalhoInicio(uiState)
+        CabecalhoInicio(
+            uiState = uiState,
+            onSelecionarPet = onSelecionarPet
+        )
 
         Column(
             modifier = Modifier
@@ -222,8 +238,11 @@ private fun ItemAcaoRapida(
 
 @Composable
 private fun CabecalhoInicio(
-    uiState: InicioUiState
+    uiState: InicioUiState,
+    onSelecionarPet: (Pet) -> Unit
 ) {
+    var menuExpandido by remember { mutableStateOf(false) }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -253,53 +272,91 @@ private fun CabecalhoInicio(
             modifier = Modifier.height(16.dp)
         )
 
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface
-            )
-        ) {
-            Row(
-                modifier = Modifier.padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .clip(CircleShape)
-                        .background(
-                            MaterialTheme.colorScheme.secondaryContainer
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "🐾",
-                        style = MaterialTheme.typography.titleLarge
-                    )
-                }
-
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(start = 12.dp)
-                ) {
-                    Text(
-                        text = uiState.petAtivo.nome,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    Text(
-                        text = "${uiState.petAtivo.especie} • ${uiState.petAtivo.raca}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-
-                Text(
-                    text = "⌄",
-                    style = MaterialTheme.typography.titleLarge
+        Box(modifier = Modifier.fillMaxWidth()) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { menuExpandido = true },
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
                 )
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(44.dp)
+                            .clip(CircleShape)
+                            .background(
+                                MaterialTheme.colorScheme.secondaryContainer
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = uiState.petAtivo.emoji.ifBlank { "🐾" },
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                    }
+
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(start = 12.dp)
+                    ) {
+                        Text(
+                            text = uiState.petAtivo.nome,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        Text(
+                            text = "${uiState.petAtivo.especie} • ${uiState.petAtivo.raca}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
+                    Icon(
+                        imageVector = Icons.Default.KeyboardArrowDown,
+                        contentDescription = "Selecionar pet",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            DropdownMenu(
+                expanded = menuExpandido,
+                onDismissRequest = { menuExpandido = false },
+                modifier = Modifier.fillMaxWidth(0.9f) // Ocupa quase toda a largura disponível do Box/Card
+            ) {
+                uiState.todosPets.forEach { pet ->
+                    DropdownMenuItem(
+                        text = {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = pet.emoji.ifBlank { "🐾" },
+                                    modifier = Modifier.padding(end = 12.dp),
+                                    fontSize = 20.sp
+                                )
+                                Text(
+                                    text = pet.nome,
+                                    fontWeight = if (pet.id == uiState.petAtivo.id) FontWeight.Bold else FontWeight.Normal,
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                            }
+                        },
+                        onClick = {
+                            onSelecionarPet(pet)
+                            menuExpandido = false
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
         }
     }

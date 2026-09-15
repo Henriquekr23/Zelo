@@ -188,6 +188,9 @@ class MainActivity : ComponentActivity() {
                                     },
                                     onNavegarParaTela = { tela ->
                                         _telaAtual.value = tela
+                                    },
+                                    onSelecionarPet = { pet ->
+                                        viewModel.selecionarPet(pet)
                                     }
                                 )
 
@@ -200,6 +203,11 @@ class MainActivity : ComponentActivity() {
                                 )
 
                                 "perfil" -> PerfilScreen(
+                                    todosPets = uiState.todosPets,
+                                    petAtivo = uiState.petAtivo,
+                                    onSelecionarPet = { pet ->
+                                        viewModel.selecionarPet(pet)
+                                    },
                                     onAbrirMeusPets = {
                                         startActivity(
                                             Intent(

@@ -9,12 +9,25 @@ class InicioModel {
         email = "camila@email.com"
     )
 
-    private val petAtivo = Pet(
-        id = 1,
-        nome = "Frida",
-        especie = "Gata",
-        raca = "Persa",
-        tutorId = 1
+    val todosPets = listOf(
+        Pet(
+            id = 1,
+            nome = "Frida",
+            especie = "Gata",
+            raca = "Persa",
+            tutorId = 1,
+            anoNascimento = 2023,
+            emoji = "🐾"
+        ),
+        Pet(
+            id = 2,
+            nome = "Thor",
+            especie = "Cão",
+            raca = "Golden Retriever",
+            tutorId = 1,
+            anoNascimento = 2019,
+            emoji = "🐶"
+        )
     )
 
     private val procedimentos = listOf(
@@ -38,6 +51,20 @@ class InicioModel {
             tipo = TipoProcedimento.CONSULTA,
             descricao = "Check-up de rotina",
             data = "02/08/2026"
+        ),
+        Procedimento(
+            id = 4,
+            petId = 2,
+            tipo = TipoProcedimento.VACINA,
+            descricao = "Vacina V10 (Anual)",
+            data = "22/09/2026"
+        ),
+        Procedimento(
+            id = 5,
+            petId = 2,
+            tipo = TipoProcedimento.VERMIFUGO,
+            descricao = "Vermífugo Plus",
+            data = "10/10/2026"
         )
     )
 
@@ -46,7 +73,7 @@ class InicioModel {
     }
 
     fun buscarPetAtivo(): Pet {
-        return petAtivo
+        return todosPets.first()
     }
 
     fun buscarProximosCuidados(
