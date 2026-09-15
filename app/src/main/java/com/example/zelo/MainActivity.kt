@@ -79,7 +79,7 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 ) { innerPadding ->
-                    Box(modifier = Modifier.padding(innerPadding)) {
+                    Box(modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())) {
 
                         when (telaAtual) {
                             "inicio" -> InicioScreen(
