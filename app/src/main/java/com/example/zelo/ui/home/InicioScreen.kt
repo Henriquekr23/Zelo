@@ -1,6 +1,7 @@
 package com.example.zelo.ui.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,7 +37,8 @@ import com.example.zelo.viewmodel.InicioUiState
 @Composable
 fun InicioScreen(
     uiState: InicioUiState,
-    onAbrirAgenda: () -> Unit
+    onAbrirAgenda: () -> Unit,
+    onNavegarParaTela: (String) -> Unit
 ) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background
@@ -57,7 +59,23 @@ fun InicioScreen(
             ) {
                 LembreteCard(uiState.proximoLembrete)
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Text(
+                    text = "Ações rápidas",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                GridAcoesRapidas(
+                    onAbrirAgenda = onAbrirAgenda,
+                    onNavegarParaTela = onNavegarParaTela
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -77,11 +95,8 @@ fun InicioScreen(
                     }
                 }
 
-                uiState.proximosCuidados.forEach {
-                        procedimento ->
-
+                uiState.proximosCuidados.forEach { procedimento ->
                     CuidadoCard(procedimento)
-
                     Spacer(modifier = Modifier.height(10.dp))
                 }
 
@@ -96,6 +111,83 @@ fun InicioScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
             }
+        }
+    }
+}
+
+@Composable
+private fun GridAcoesRapidas(
+    onAbrirAgenda: () -> Unit,
+    onNavegarParaTela: (String) -> Unit
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            ItemAcaoRapida(
+                titulo = "Agenda",
+                descricao = "Ver consultas",
+                icone = "📅",
+                modifier = Modifier.weight(1f),
+                onClick = onAbrirAgenda
+            )
+            ItemAcaoRapida(
+                titulo = "Histórico",
+                descricao = "Cuidados passados",
+                icone = "📄",
+                modifier = Modifier.weight(1f),
+                onClick = { onNavegarParaTela("historico") }
+            )
+        }
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            ItemAcaoRapida(
+                titulo = "Meus Pets",
+                descricao = "Gerenciar perfis",
+                icone = "🐶",
+                modifier = Modifier.weight(1f),
+                onClick = { onNavegarParaTela("perfil") }
+            )
+            ItemAcaoRapida(
+                titulo = "Perfil",
+                descricao = "Configurações",
+                icone = "⚙️",
+                modifier = Modifier.weight(1f),
+                onClick = { onNavegarParaTela("perfil") }
+            )
+        }
+    }
+}
+
+@Composable
+private fun ItemAcaoRapida(
+    titulo: String,
+    descricao: String,
+    icone: String,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        modifier = modifier
+            .clip(MaterialTheme.shapes.medium)
+            .clickable(onClick = onClick)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(text = icone, style = MaterialTheme.typography.titleLarge)
+            Text(text = titulo, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge)
+            Text(text = descricao, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -260,7 +352,7 @@ private fun CuidadoCard(
                 modifier = Modifier
                     .weight(1f)
                     .padding(start = 12.dp)
-            ) {
+                ) {
                 Text(
                     text = procedimento.descricao,
                     style = MaterialTheme.typography.bodyLarge,
