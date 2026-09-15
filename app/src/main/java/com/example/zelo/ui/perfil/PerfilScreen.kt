@@ -20,7 +20,9 @@ import androidx.compose.ui.unit.sp
 import com.example.zelo.ui.theme.*
 
 @Composable
-fun PerfilScreen() {
+fun PerfilScreen(
+    onAbrirMeusPets: () -> Unit = {}
+) {
 
     Column(
         modifier = Modifier
@@ -31,7 +33,7 @@ fun PerfilScreen() {
         CabecalhoPerfil()
 
         Column(modifier = Modifier.padding(20.dp)) {
-            SecaoMeusPets()
+            SecaoMeusPets(onAbrirMeusPets = onAbrirMeusPets)
             Spacer(modifier = Modifier.height(24.dp))
             SecaoPreferencias()
 
@@ -93,7 +95,7 @@ private fun CabecalhoPerfil() {
 }
 
 @Composable
-private fun SecaoMeusPets() {
+private fun SecaoMeusPets(onAbrirMeusPets: () -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -102,10 +104,11 @@ private fun SecaoMeusPets() {
         Text(
             text = "Meus pets",
             style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.clickable(onClick = onAbrirMeusPets)
         )
-        TextButton(onClick = { }) {
-            Text(text = "+ adicionar", color = MaterialTheme.colorScheme.primary)
+        TextButton(onClick = onAbrirMeusPets) {
+            Text(text = "ver todos", color = MaterialTheme.colorScheme.primary)
         }
     }
 

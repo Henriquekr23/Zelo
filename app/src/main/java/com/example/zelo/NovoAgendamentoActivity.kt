@@ -34,6 +34,13 @@ class NovoAgendamentoActivity : AppCompatActivity() {
             edtData.setText(dataRecebida)
         }
 
+        // Recebe o nome do pet selecionado na grade "Meus Pets" (passagem de parâmetro via Intent).
+        val nomePetRecebido = intent.getStringExtra("NOME_PET_SELECIONADO")
+
+        if (!nomePetRecebido.isNullOrBlank()) {
+            edtNomePet.setText(nomePetRecebido)
+        }
+
         btnVoltar.setOnClickListener {
             finish()
         }

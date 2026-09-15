@@ -39,6 +39,7 @@ import com.example.zelo.viewmodel.InicioUiState
 fun InicioScreen(
     uiState: InicioUiState,
     onAbrirAgenda: () -> Unit,
+    onAbrirMeusPets: () -> Unit,
     onNavegarParaTela: (String) -> Unit
 ) {
     Column(
@@ -69,6 +70,7 @@ fun InicioScreen(
 
                 GridAcoesRapidas(
                     onAbrirAgenda = onAbrirAgenda,
+                    onAbrirMeusPets = onAbrirMeusPets,
                     onNavegarParaTela = onNavegarParaTela
                 )
 
@@ -114,6 +116,7 @@ fun InicioScreen(
 @Composable
 private fun GridAcoesRapidas(
     onAbrirAgenda: () -> Unit,
+    onAbrirMeusPets: () -> Unit,
     onNavegarParaTela: (String) -> Unit
 ) {
     Column(
@@ -148,7 +151,7 @@ private fun GridAcoesRapidas(
                 descricao = "Gerenciar perfis",
                 icone = "🐶",
                 modifier = Modifier.weight(1f),
-                onClick = { onNavegarParaTela("perfil") }
+                onClick = onAbrirMeusPets
             )
             ItemAcaoRapida(
                 titulo = "Perfil",

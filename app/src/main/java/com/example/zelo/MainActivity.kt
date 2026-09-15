@@ -85,10 +85,13 @@ class MainActivity : ComponentActivity() {
                             "inicio" -> InicioScreen(
                                 uiState = uiState,
                                 onAbrirAgenda = { startActivity(Intent(this@MainActivity, AgendaActivity::class.java)) },
+                                onAbrirMeusPets = { startActivity(Intent(this@MainActivity, MeusPetsActivity::class.java)) },
                                 onNavegarParaTela = { tela -> _telaAtual.value = tela }
                             )
 
-                            "perfil" -> PerfilScreen()
+                            "perfil" -> PerfilScreen(
+                                onAbrirMeusPets = { startActivity(Intent(this@MainActivity, MeusPetsActivity::class.java)) }
+                            )
 
                             "historico" -> HistoricoScreen(uiState = historicoUiState)
                         }
