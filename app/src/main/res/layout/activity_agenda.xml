@@ -7,8 +7,28 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/zelo_background"
-    android:padding="20dp"
     tools:context=".AgendaActivity">
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideStart"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_begin="20dp" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideEnd"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_end="20dp" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideTop"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_begin="20dp" />
 
     <TextView
         android:id="@+id/txtTituloAgenda"
@@ -18,27 +38,8 @@
         android:textColor="@color/zelo_text"
         android:textSize="28sp"
         android:textStyle="bold"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnAdicionarRapido"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:minWidth="0dp"
-        android:minHeight="0dp"
-        android:padding="0dp"
-        android:gravity="center"
-        android:insetTop="0dp"
-        android:insetBottom="0dp"
-        android:text="+"
-        android:textAllCaps="false"
-        android:textColor="@color/white"
-        android:textSize="26sp"
-        app:backgroundTint="@color/zelo_primary"
-        app:cornerRadius="14dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintStart_toStartOf="@id/guideStart"
+        app:layout_constraintTop_toTopOf="@id/guideTop" />
 
     <TextView
         android:id="@+id/txtMesAtual"
@@ -49,8 +50,8 @@
         android:textColor="@color/zelo_text"
         android:textSize="17sp"
         android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="@id/guideEnd"
+        app:layout_constraintStart_toStartOf="@id/guideStart"
         app:layout_constraintTop_toBottomOf="@id/txtTituloAgenda" />
 
     <LinearLayout
@@ -60,8 +61,8 @@
         android:layout_marginTop="8dp"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="@id/guideEnd"
+        app:layout_constraintStart_toStartOf="@id/guideStart"
         app:layout_constraintTop_toBottomOf="@id/txtMesAtual">
 
         <com.google.android.material.button.MaterialButton
@@ -116,7 +117,7 @@
         android:textSize="13sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toStartOf="@id/txtQuantidade"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toStartOf="@id/guideStart"
         app:layout_constraintTop_toBottomOf="@id/layoutNavegacaoSemana" />
 
     <TextView
@@ -127,7 +128,7 @@
         android:textColor="@color/zelo_primary"
         android:textSize="13sp"
         app:layout_constraintBaseline_toBaselineOf="@id/txtDataSelecionada"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="@id/guideEnd" />
 
     <ListView
         android:id="@+id/listViewAgendamentos"
@@ -139,8 +140,8 @@
         android:divider="@null"
         android:dividerHeight="12dp"
         app:layout_constraintBottom_toTopOf="@id/btnNovoAgendamento"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="@id/guideEnd"
+        app:layout_constraintStart_toStartOf="@id/guideStart"
         app:layout_constraintTop_toBottomOf="@id/txtDataSelecionada"
         tools:listitem="@layout/item_agendamento" />
 
@@ -148,6 +149,7 @@
         android:id="@+id/btnNovoAgendamento"
         android:layout_width="0dp"
         android:layout_height="56dp"
+        android:layout_marginBottom="20dp"
         android:text="@string/agendar_nova_consulta"
         android:textColor="@color/white"
         android:textStyle="bold"
@@ -156,8 +158,14 @@
         app:icon="@android:drawable/ic_input_add"
         app:iconGravity="textStart"
         app:iconTint="@color/white"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintBottom_toTopOf="@id/composeViewBottomNav"
+        app:layout_constraintEnd_toEndOf="@id/guideEnd"
+        app:layout_constraintStart_toStartOf="@id/guideStart" />
+
+    <androidx.compose.ui.platform.ComposeView
+        android:id="@+id/composeViewBottomNav"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
