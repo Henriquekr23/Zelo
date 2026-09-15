@@ -20,7 +20,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -55,62 +54,70 @@ fun InicioScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(20.dp)
         ) {
-                LembreteCard(uiState.proximoLembrete)
+            LembreteCard(
+                procedimento = uiState.proximoLembrete,
+                onClick = {
+                    onNavegarParaTela("lembretes")
+                }
+            )
 
-                Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
+            Text(
+                text = "Ações rápidas",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            GridAcoesRapidas(
+                onAbrirAgenda = onAbrirAgenda,
+                onAbrirMeusPets = onAbrirMeusPets,
+                onNavegarParaTela = onNavegarParaTela
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(
-                    text = "Ações rápidas",
+                    text = "Próximos cuidados",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground
+                    modifier = Modifier.weight(1f)
                 )
 
-                Spacer(modifier = Modifier.height(12.dp))
-
-                GridAcoesRapidas(
-                    onAbrirAgenda = onAbrirAgenda,
-                    onAbrirMeusPets = onAbrirMeusPets,
-                    onNavegarParaTela = onNavegarParaTela
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
+                TextButton(
+                    onClick = onAbrirAgenda
                 ) {
-                    Text(
-                        text = "Próximos cuidados",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.weight(1f)
-                    )
-
-                    TextButton(
-                        onClick = onAbrirAgenda
-                    ) {
-                        Text(text = "Ver tudo")
-                    }
+                    Text(text = "Ver tudo")
                 }
-
-                uiState.proximosCuidados.forEach { procedimento ->
-                    CuidadoCard(procedimento)
-                    Spacer(modifier = Modifier.height(10.dp))
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Button(
-                    onClick = onAbrirAgenda,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(text = "Agendar consulta")
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
             }
+
+            uiState.proximosCuidados.forEach { procedimento ->
+                CuidadoCard(procedimento)
+
+                Spacer(
+                    modifier = Modifier.height(10.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Button(
+                onClick = onAbrirAgenda,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(text = "Agendar consulta")
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
         }
+    }
 }
 
 @Composable
@@ -134,14 +141,18 @@ private fun GridAcoesRapidas(
                 modifier = Modifier.weight(1f),
                 onClick = onAbrirAgenda
             )
+
             ItemAcaoRapida(
                 titulo = "Histórico",
                 descricao = "Cuidados passados",
                 icone = "📄",
                 modifier = Modifier.weight(1f),
-                onClick = { onNavegarParaTela("historico") }
+                onClick = {
+                    onNavegarParaTela("historico")
+                }
             )
         }
+
         Row(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.fillMaxWidth()
@@ -153,12 +164,15 @@ private fun GridAcoesRapidas(
                 modifier = Modifier.weight(1f),
                 onClick = onAbrirMeusPets
             )
+
             ItemAcaoRapida(
                 titulo = "Perfil",
                 descricao = "Configurações",
                 icone = "⚙️",
                 modifier = Modifier.weight(1f),
-                onClick = { onNavegarParaTela("perfil") }
+                onClick = {
+                    onNavegarParaTela("perfil")
+                }
             )
         }
     }
@@ -178,15 +192,30 @@ private fun ItemAcaoRapida(
         ),
         modifier = modifier
             .clip(MaterialTheme.shapes.medium)
-            .clickable(onClick = onClick)
+            .clickable(
+                onClick = onClick
+            )
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            Text(text = icone, style = MaterialTheme.typography.titleLarge)
-            Text(text = titulo, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge)
-            Text(text = descricao, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(
+                text = icone,
+                style = MaterialTheme.typography.titleLarge
+            )
+
+            Text(
+                text = titulo,
+                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.bodyLarge
+            )
+
+            Text(
+                text = descricao,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
@@ -220,7 +249,9 @@ private fun CabecalhoInicio(
             color = MaterialTheme.colorScheme.onPrimary
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(
+            modifier = Modifier.height(16.dp)
+        )
 
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -259,11 +290,9 @@ private fun CabecalhoInicio(
                     )
 
                     Text(
-                        text = "${uiState.petAtivo.especie} • " +
-                                uiState.petAtivo.raca,
+                        text = "${uiState.petAtivo.especie} • ${uiState.petAtivo.raca}",
                         style = MaterialTheme.typography.bodyMedium,
-                        color =
-                            MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
@@ -278,10 +307,16 @@ private fun CabecalhoInicio(
 
 @Composable
 private fun LembreteCard(
-    procedimento: Procedimento?
+    procedimento: Procedimento?,
+    onClick: () -> Unit
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(
+                enabled = procedimento != null,
+                onClick = onClick
+            ),
         colors = CardDefaults.cardColors(
             containerColor = WarningContainer
         )
@@ -300,14 +335,20 @@ private fun LembreteCard(
                     modifier = Modifier
                         .size(42.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFFFFB35C)),
+                        .background(
+                            Color(0xFFFFB35C)
+                        ),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(text = "▣")
+                    Text(
+                        text = "▣"
+                    )
                 }
 
                 Column(
-                    modifier = Modifier.padding(start = 12.dp)
+                    modifier = Modifier.padding(
+                        start = 12.dp
+                    )
                 ) {
                     Text(
                         text = "${procedimento.descricao} vence em 5 dias",
@@ -316,10 +357,9 @@ private fun LembreteCard(
                     )
 
                     Text(
-                        text = "Enviaremos um lembrete em breve.",
+                        text = "Toque para ver os próximos vencimentos.",
                         style = MaterialTheme.typography.bodySmall,
-                        color =
-                            MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -345,14 +385,18 @@ private fun CuidadoCard(
                 modifier = Modifier
                     .size(8.dp)
                     .clip(CircleShape)
-                    .background(corDoProcedimento(procedimento.tipo))
+                    .background(
+                        corDoProcedimento(
+                            procedimento.tipo
+                        )
+                    )
             )
 
             Column(
                 modifier = Modifier
                     .weight(1f)
                     .padding(start = 12.dp)
-                ) {
+            ) {
                 Text(
                     text = procedimento.descricao,
                     style = MaterialTheme.typography.bodyLarge,
@@ -360,14 +404,18 @@ private fun CuidadoCard(
                 )
 
                 Text(
-                    text = textoSecundario(procedimento),
+                    text = textoSecundario(
+                        procedimento
+                    ),
                     style = MaterialTheme.typography.bodySmall,
-                    color =
-                        MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
-            if (procedimento.tipo == TipoProcedimento.VACINA) {
+            if (
+                procedimento.tipo ==
+                TipoProcedimento.VACINA
+            ) {
                 Text(
                     text = "EM BREVE",
                     style = MaterialTheme.typography.labelSmall,
