@@ -17,10 +17,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.zelo.model.Pet
 import com.example.zelo.ui.theme.*
 
 @Composable
 fun PerfilScreen(
+    todosPets: List<Pet>,
+    petAtivo: Pet,
+    onSelecionarPet: (Pet) -> Unit,
     onAbrirMeusPets: () -> Unit = {}
 ) {
 
@@ -33,7 +37,12 @@ fun PerfilScreen(
         CabecalhoPerfil()
 
         Column(modifier = Modifier.padding(20.dp)) {
-            SecaoMeusPets(onAbrirMeusPets = onAbrirMeusPets)
+            SecaoMeusPets(
+                todosPets = todosPets,
+                petAtivo = petAtivo,
+                onSelecionarPet = onSelecionarPet,
+                onAbrirMeusPets = onAbrirMeusPets
+            )
             Spacer(modifier = Modifier.height(24.dp))
             SecaoPreferencias()
 
@@ -95,7 +104,12 @@ private fun CabecalhoPerfil() {
 }
 
 @Composable
-private fun SecaoMeusPets(onAbrirMeusPets: () -> Unit) {
+private fun SecaoMeusPets(
+    todosPets: List<Pet>,
+    petAtivo: Pet,
+    onSelecionarPet: (Pet) -> Unit,
+    onAbrirMeusPets: () -> Unit
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -114,72 +128,53 @@ private fun SecaoMeusPets(onAbrirMeusPets: () -> Unit) {
 
     Spacer(modifier = Modifier.height(8.dp))
 
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .border(1.dp, MaterialTheme.colorScheme.primary, ZeloShapes.medium),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(ZeloShapes.small)
-                    .background(SageContainer), // Verde claro do Color.kt
-                contentAlignment = Alignment.Center
-            ) {
-                Text(text = "🐾", fontSize = 24.sp)
-            }
-
-            Column(modifier = Modifier.weight(1f).padding(start = 12.dp)) {
-                Text(text = "Frida", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                Text(text = "Gata • Persa • 3 anos", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-
-            Surface(
-                color = WarningContainer,
-                shape = PillShape,
-                modifier = Modifier.padding(start = 8.dp)
-            ) {
-                Text(
-                    text = "ATIVO",
-                    color = WarningIcon,
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+    todosPets.forEach { pet ->
+        val isAtivo = pet.id == petAtivo.id
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp)
+                .then(
+                    if (isAtivo) Modifier.border(1.dp, MaterialTheme.colorScheme.primary, ZeloShapes.medium)
+                    else Modifier
                 )
-            }
-        }
-    }
-
-    Spacer(modifier = Modifier.height(12.dp))
-
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .clickable { onSelecionarPet(pet) },
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
         ) {
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(ZeloShapes.small)
-                    .background(OutlineVariant),
-                contentAlignment = Alignment.Center
+            Row(
+                modifier = Modifier.padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = "🐶", fontSize = 24.sp)
-            }
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(ZeloShapes.small)
+                        .background(if (isAtivo) SageContainer else OutlineVariant),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = pet.emoji.ifBlank { "🐾" }, fontSize = 24.sp)
+                }
 
-            Column(modifier = Modifier.weight(1f).padding(start = 12.dp)) {
-                Text(text = "Thor", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                Text(text = "Cão • Golden Retriever • 5 anos", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Column(modifier = Modifier.weight(1f).padding(start = 12.dp)) {
+                    Text(text = pet.nome, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text(text = "${pet.especie} • ${pet.raca}", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+
+                if (isAtivo) {
+                    Surface(
+                        color = WarningContainer,
+                        shape = PillShape,
+                        modifier = Modifier.padding(start = 8.dp)
+                    ) {
+                        Text(
+                            text = "ATIVO",
+                            color = WarningIcon,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        )
+                    }
+                }
             }
         }
     }
