@@ -10,4 +10,6 @@
     <string name="horario_agendamento">Horário — HH:MM</string>
     <string name="descricao_agendamento">Descrição da consulta</string>
     <string name="salvar_agendamento">Salvar agendamento</string>
+    <string name="titulo_meus_pets">Meus Pets</string>
+    <string name="subtitulo_meus_pets">Toque em um pet para agendar uma consulta</string>
 </resources>

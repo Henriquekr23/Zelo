@@ -28,6 +28,10 @@
         <activity
             android:name=".AgendaActivity"
             android:exported="false" />
+
+        <activity
+            android:name=".MeusPetsActivity"
+            android:exported="false" />
     </application>
 
 </manifest>
