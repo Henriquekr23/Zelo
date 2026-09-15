@@ -21,7 +21,8 @@ import com.example.zelo.ui.theme.*
 
 @Composable
 fun PerfilScreen(
-    onAbrirMeusPets: () -> Unit = {}
+    onAbrirMeusPets: () -> Unit = {},
+    onNavegarParaHistorico: () -> Unit = {}
 ) {
 
     Column(
@@ -35,7 +36,8 @@ fun PerfilScreen(
         Column(modifier = Modifier.padding(20.dp)) {
             SecaoMeusPets(onAbrirMeusPets = onAbrirMeusPets)
             Spacer(modifier = Modifier.height(24.dp))
-            SecaoPreferencias()
+            SecaoPreferencias(onNavegarParaHistorico)
+            Spacer(modifier = Modifier.height(32.dp))
 
             Spacer(modifier = Modifier.height(32.dp))
             TextButton(
@@ -129,7 +131,7 @@ private fun SecaoMeusPets(onAbrirMeusPets: () -> Unit) {
                 modifier = Modifier
                     .size(48.dp)
                     .clip(ZeloShapes.small)
-                    .background(SageContainer), // Verde claro do Color.kt
+                    .background(SageContainer),
                 contentAlignment = Alignment.Center
             ) {
                 Text(text = "🐾", fontSize = 24.sp)
@@ -186,7 +188,7 @@ private fun SecaoMeusPets(onAbrirMeusPets: () -> Unit) {
 }
 
 @Composable
-private fun SecaoPreferencias() {
+private fun SecaoPreferencias(onNavegarParaHistorico: () -> Unit) {
     Text(
         text = "Preferências",
         style = MaterialTheme.typography.titleMedium,
@@ -214,15 +216,14 @@ private fun SecaoPreferencias() {
                 )
             }
 
-            Divider(color = OutlineVariant, thickness = 1.dp)
+            HorizontalDivider(color = OutlineVariant, thickness = 1.dp)
 
 
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable {
-                        // TODO (André, Isa ou Henrique): Coloque aqui a Intent para abrir a HistoricoActivity
-                        // startActivity(Intent(context, HistoricoActivity::class.java))
+                        onNavegarParaHistorico()
                     }
                     .padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -232,7 +233,7 @@ private fun SecaoPreferencias() {
                 Text(text = ">", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
 
-            Divider(color = OutlineVariant, thickness = 1.dp)
+            HorizontalDivider(color = OutlineVariant, thickness = 1.dp)
 
 
             Row(

@@ -90,6 +90,7 @@ class MainActivity : ComponentActivity() {
                             )
 
                             "perfil" -> PerfilScreen(
+                                onNavegarParaHistorico = { _telaAtual.value = "historico" },
                                 onAbrirMeusPets = { startActivity(Intent(this@MainActivity, MeusPetsActivity::class.java)) }
                             )
 
