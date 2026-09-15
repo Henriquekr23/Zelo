@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -40,23 +41,19 @@ fun InicioScreen(
     onAbrirAgenda: () -> Unit,
     onNavegarParaTela: (String) -> Unit
 ) {
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background
-    ) { innerPadding ->
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
+        CabecalhoInicio(uiState)
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
+                .verticalScroll(rememberScrollState())
+                .padding(20.dp)
         ) {
-            CabecalhoInicio(uiState)
-
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(20.dp)
-            ) {
                 LembreteCard(uiState.proximoLembrete)
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -112,7 +109,6 @@ fun InicioScreen(
                 Spacer(modifier = Modifier.height(16.dp))
             }
         }
-    }
 }
 
 @Composable
@@ -200,10 +196,11 @@ private fun CabecalhoInicio(
         modifier = Modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.primary)
+            .statusBarsPadding()
             .padding(
                 start = 20.dp,
                 end = 20.dp,
-                top = 28.dp,
+                top = 20.dp,
                 bottom = 24.dp
             )
     ) {
