@@ -13,3 +13,6 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Saídas geradas por assistentes (não fazem parte do código do projeto)
+/Claude outputs/
