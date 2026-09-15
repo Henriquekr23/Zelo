@@ -11,19 +11,22 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import com.example.zelo.ui.home.InicioScreen
+import com.example.zelo.ui.historico.HistoricoScreen
 import com.example.zelo.ui.perfil.PerfilScreen
 import com.example.zelo.ui.theme.ZeloTheme
 import com.example.zelo.viewmodel.InicioViewModel
+import com.example.zelo.viewmodel.HistoricoViewModel
 
 class MainActivity : ComponentActivity() {
 
     private val viewModel: InicioViewModel by viewModels()
+    private val historicoViewModel: HistoricoViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,6 +34,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             ZeloTheme {
                 val uiState by viewModel.uiState
+                val historicoUiState by historicoViewModel.uiState
 
                 var telaAtual by remember { mutableStateOf("inicio") }
 
@@ -54,10 +58,11 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                             NavigationBarItem(
-                                icon = { Icon(Icons.Default.Notifications, contentDescription = "Lembretes") },
-                                label = { Text("Lembretes") },
-                                selected = telaAtual == "lembretes",
-                                onClick = { telaAtual = "lembretes" }
+                                icon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = "Histórico") },
+                                label = { Text("Histórico") },
+                                selected = telaAtual == "historico",
+                                onClick = { telaAtual = "historico" },
+                                colors = NavigationBarItemDefaults.colors(indicatorColor = MaterialTheme.colorScheme.secondaryContainer)
                             )
                             NavigationBarItem(
                                 icon = { Icon(Icons.Default.Person, contentDescription = "Perfil") },
@@ -79,11 +84,7 @@ class MainActivity : ComponentActivity() {
 
                             "perfil" -> PerfilScreen()
 
-                            "lembretes" -> {
-                                // TODO (André,Isa ou Henrique): Quando a Tela de Lembretes estiver pronta,
-                                // apague este Text e chame a sua função LembretesScreen() aqui.
-                                Text(text = "Tela de Lembretes em construção...")
-                            }
+                            "historico" -> HistoricoScreen(uiState = historicoUiState)
                         }
                     }
                 }
