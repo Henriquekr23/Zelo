@@ -29,6 +29,16 @@ import com.example.zelo.viewmodel.AgendaViewModel
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
+import android.widget.Toast
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import com.example.zelo.data.repository.AppThemeRepository
+import android.content.res.ColorStateList
+import android.graphics.Color
+import com.example.zelo.data.repository.AppColorTheme
+import android.graphics.drawable.GradientDrawable
+import androidx.appcompat.app.AlertDialog
+import com.example.zelo.model.StatusAgendamento
 
 class AgendaActivity : AppCompatActivity() {
 
@@ -43,7 +53,11 @@ class AgendaActivity : AppCompatActivity() {
             isLenient = false
         }
 
-    private var dataSelecionadaAtual = "10/09/2026"
+    private var dataSelecionadaAtual =
+        SimpleDateFormat(
+            "dd/MM/yyyy",
+            Locale("pt", "BR")
+        ).format(Calendar.getInstance().time)
 
     private val inicioCalendario: Calendar by lazy {
         Calendar.getInstance(localeBrasil).apply {
@@ -53,6 +67,10 @@ class AgendaActivity : AppCompatActivity() {
 
             moverParaSegundaFeira(this)
         }
+    }
+
+    private val appThemeRepository by lazy {
+        AppThemeRepository(applicationContext)
     }
 
     private val novoAgendamentoLauncher =
@@ -67,24 +85,52 @@ class AgendaActivity : AppCompatActivity() {
             val dados =
                 resultado.data ?: return@registerForActivityResult
 
-            val agendamento = Agendamento(
-                id = System.currentTimeMillis().toInt(),
-                petId = 1,
-                nomePet = dados
-                    .getStringExtra("NOME_PET")
-                    .orEmpty(),
-                data = dados
-                    .getStringExtra("DATA")
-                    .orEmpty(),
-                horario = dados
-                    .getStringExtra("HORARIO")
-                    .orEmpty(),
-                descricao = dados
-                    .getStringExtra("DESCRICAO")
-                    .orEmpty()
+            val nomePet = dados
+                .getStringExtra("NOME_PET")
+                .orEmpty()
+
+            val petId = dados.getIntExtra("PET_ID", -1)
+
+            if (petId == -1) {
+
+                Toast.makeText(
+                    this,
+                    "Animal inválido.",
+                    Toast.LENGTH_SHORT
+                ).show()
+
+                return@registerForActivityResult
+            }
+
+            val idAgendamento = dados.getIntExtra(
+                "AGENDAMENTO_ID",
+                0
             )
 
-            viewModel.adicionarAgendamento(agendamento)
+            val agendamento = Agendamento(
+                id = idAgendamento,
+                petId = petId,
+                nomePet = nomePet,
+                data = dados.getStringExtra("DATA").orEmpty(),
+                horario = dados.getStringExtra("HORARIO").orEmpty(),
+                descricao = dados.getStringExtra("DESCRICAO").orEmpty()
+            )
+
+            if (idAgendamento > 0) {
+
+                viewModel.editarAgendamento(
+                    id = idAgendamento,
+                    petId = petId,
+                    nomePet = nomePet,
+                    data = agendamento.data,
+                    horario = agendamento.horario,
+                    descricao = agendamento.descricao
+                )
+
+            } else {
+
+                viewModel.adicionarAgendamento(agendamento)
+            }
 
             dataSelecionadaAtual = agendamento.data
 
@@ -100,46 +146,108 @@ class AgendaActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        binding =
-            ActivityAgendaBinding.inflate(layoutInflater)
+        binding = ActivityAgendaBinding.inflate(layoutInflater)
 
         setContentView(binding.root)
 
         configurarEventos()
         configurarObservadores()
         configurarBarraNavegacao()
+
+        configurarDataInicial()
     }
 
     private fun configurarBarraNavegacao() {
+
         binding.composeViewBottomNav.setContent {
-            ZeloTheme {
-                NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
+
+            val temaSelecionado by
+            appThemeRepository.tema.collectAsState()
+
+            ZeloTheme(
+                temaCor = temaSelecionado
+            ) {
+
+                NavigationBar(
+                    containerColor = MaterialTheme.colorScheme.surface
+                ) {
+
                     NavigationBarItem(
-                        icon = { Icon(Icons.Default.Home, contentDescription = "Início") },
-                        label = { Text("Início") },
+                        icon = {
+                            Icon(
+                                Icons.Default.Home,
+                                contentDescription = "Início"
+                            )
+                        },
+                        label = {
+                            Text("Início")
+                        },
                         selected = false,
-                        onClick = { navegarParaTela("inicio") },
-                        colors = NavigationBarItemDefaults.colors(indicatorColor = MaterialTheme.colorScheme.secondaryContainer)
+                        onClick = {
+                            navegarParaTela("inicio")
+                        },
+                        colors = NavigationBarItemDefaults.colors(
+                            indicatorColor =
+                                MaterialTheme.colorScheme.secondaryContainer
+                        )
                     )
+
                     NavigationBarItem(
-                        icon = { Icon(Icons.Default.DateRange, contentDescription = "Agenda") },
-                        label = { Text("Agenda") },
+                        icon = {
+                            Icon(
+                                Icons.Default.DateRange,
+                                contentDescription = "Agenda"
+                            )
+                        },
+                        label = {
+                            Text("Agenda")
+                        },
                         selected = true,
-                        onClick = { /* Já estamos na agenda */ }
+                        onClick = {},
+                        colors = NavigationBarItemDefaults.colors(
+                            indicatorColor =
+                                MaterialTheme.colorScheme.secondaryContainer
+                        )
                     )
+
                     NavigationBarItem(
-                        icon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = "Histórico") },
-                        label = { Text("Histórico") },
+                        icon = {
+                            Icon(
+                                Icons.AutoMirrored.Filled.List,
+                                contentDescription = "Histórico"
+                            )
+                        },
+                        label = {
+                            Text("Histórico")
+                        },
                         selected = false,
-                        onClick = { navegarParaTela("historico") },
-                        colors = NavigationBarItemDefaults.colors(indicatorColor = MaterialTheme.colorScheme.secondaryContainer)
+                        onClick = {
+                            navegarParaTela("historico")
+                        },
+                        colors = NavigationBarItemDefaults.colors(
+                            indicatorColor =
+                                MaterialTheme.colorScheme.secondaryContainer
+                        )
                     )
+
                     NavigationBarItem(
-                        icon = { Icon(Icons.Default.Person, contentDescription = "Perfil") },
-                        label = { Text("Perfil") },
+                        icon = {
+                            Icon(
+                                Icons.Default.Person,
+                                contentDescription = "Perfil"
+                            )
+                        },
+                        label = {
+                            Text("Perfil")
+                        },
                         selected = false,
-                        onClick = { navegarParaTela("perfil") },
-                        colors = NavigationBarItemDefaults.colors(indicatorColor = MaterialTheme.colorScheme.secondaryContainer)
+                        onClick = {
+                            navegarParaTela("perfil")
+                        },
+                        colors = NavigationBarItemDefaults.colors(
+                            indicatorColor =
+                                MaterialTheme.colorScheme.secondaryContainer
+                        )
                     )
                 }
             }
@@ -173,7 +281,10 @@ class AgendaActivity : AppCompatActivity() {
             binding.listViewAgendamentos.adapter =
                 AgendaAdapter(
                     context = this,
-                    agendamentos = agendamentos
+                    agendamentos = agendamentos,
+                    onEditarAgendamento = { agendamento ->
+                        exibirOpcoesAgendamento(agendamento)
+                    }
                 )
         }
     }
@@ -276,16 +387,26 @@ class AgendaActivity : AppCompatActivity() {
                 6.dp()
             )
 
-            setTextColor(
-                ContextCompat.getColor(
-                    this@AgendaActivity,
-                    if (estaSelecionado) {
-                        android.R.color.white
-                    } else {
-                        R.color.zelo_text_secondary
-                    }
-                )
-            )
+            val corTexto = if (estaSelecionado) {
+
+                Color.WHITE
+
+            } else {
+
+                when (appThemeRepository.tema.value) {
+
+                    AppColorTheme.ORIGINAL ->
+                        Color.rgb(108, 94, 86)
+
+                    AppColorTheme.VERDE ->
+                        Color.rgb(83, 102, 91)
+
+                    AppColorTheme.AZUL ->
+                        Color.rgb(86, 105, 125)
+                }
+            }
+
+            setTextColor(corTexto)
 
             setTypeface(
                 null,
@@ -297,10 +418,29 @@ class AgendaActivity : AppCompatActivity() {
             )
 
             background = if (estaSelecionado) {
-                ContextCompat.getDrawable(
-                    this@AgendaActivity,
-                    R.drawable.bg_dia_selecionado
-                )
+
+                val corSelecionada = when (
+                    appThemeRepository.tema.value
+                ) {
+                    AppColorTheme.ORIGINAL ->
+                        Color.rgb(184, 116, 91)
+
+                    AppColorTheme.VERDE ->
+                        Color.rgb(56, 142, 108)
+
+                    AppColorTheme.AZUL ->
+                        Color.rgb(57, 120, 184)
+                }
+
+                GradientDrawable().apply {
+
+                    shape = GradientDrawable.RECTANGLE
+
+                    cornerRadius = 14.dp().toFloat()
+
+                    setColor(corSelecionada)
+                }
+
             } else {
                 null
             }
@@ -427,5 +567,166 @@ class AgendaActivity : AppCompatActivity() {
         return (
                 this * resources.displayMetrics.density
                 ).toInt()
+    }
+
+    private fun configurarDataInicial() {
+
+        val hoje = formatoData.format(Calendar.getInstance().time)
+        val dataRecebida = intent.getStringExtra("DATA_AGENDAMENTO")
+
+        val dataInicial = if (dataRecebida.isNullOrBlank()) {
+            hoje
+        } else {
+            val dataValida = try {
+                formatoData.parse(dataRecebida)
+            } catch (_: Exception) {
+                null
+            }
+
+            if (dataValida != null && formatoData.format(dataValida) == dataRecebida) {
+                dataRecebida
+            } else {
+                hoje
+            }
+        }
+
+        dataSelecionadaAtual = dataInicial
+        reposicionarCalendario(dataInicial)
+
+        binding.txtDataSelecionada.text = formatarDataCabecalho(dataInicial)
+        montarCalendario()
+
+        viewModel.carregarAgendamentos(dataInicial)
+    }
+
+    private fun abrirEdicaoAgendamento(agendamento: Agendamento) {
+
+        val intent = Intent(
+            this,
+            NovoAgendamentoActivity::class.java
+        ).apply {
+            putExtra("EDITAR_AGENDAMENTO", true)
+            putExtra("AGENDAMENTO_ID", agendamento.id)
+            putExtra("PET_ID_SELECIONADO", agendamento.petId)
+            putExtra("DATA_SELECIONADA", agendamento.data)
+            putExtra("HORARIO_SELECIONADO", agendamento.horario)
+            putExtra("DESCRICAO_SELECIONADA", agendamento.descricao)
+        }
+
+        novoAgendamentoLauncher.launch(intent)
+    }
+
+    private fun exibirOpcoesAgendamento(
+        agendamento: Agendamento
+    ) {
+
+        if (agendamento.status != StatusAgendamento.AGENDADO) {
+
+            val status = when (agendamento.status) {
+                StatusAgendamento.CONCLUIDO -> "Concluído"
+                StatusAgendamento.CANCELADO -> "Cancelado"
+                StatusAgendamento.AGENDADO -> "Agendado"
+            }
+
+            AlertDialog.Builder(this)
+                .setTitle("Agendamento de ${agendamento.nomePet}")
+                .setMessage(
+                    "${agendamento.descricao}\n" +
+                            "${agendamento.data} às ${agendamento.horario}\n\n" +
+                            "Status: $status"
+                )
+                .setPositiveButton("Fechar", null)
+                .show()
+
+            return
+        }
+
+        val opcoes = arrayOf(
+            "Marcar como concluído",
+            "Alterar agendamento",
+            "Cancelar agendamento"
+        )
+
+        AlertDialog.Builder(this)
+            .setTitle("Agendamento de ${agendamento.nomePet}")
+            .setItems(opcoes) { _, posicao ->
+
+                when (posicao) {
+
+                    0 -> confirmarAlteracaoStatus(
+                        agendamento,
+                        StatusAgendamento.CONCLUIDO
+                    )
+
+                    1 -> abrirEdicaoAgendamento(
+                        agendamento
+                    )
+
+                    2 -> confirmarAlteracaoStatus(
+                        agendamento,
+                        StatusAgendamento.CANCELADO
+                    )
+                }
+            }
+            .setNegativeButton("Voltar", null)
+            .show()
+    }
+
+    private fun confirmarAlteracaoStatus(
+        agendamento: Agendamento,
+        novoStatus: StatusAgendamento
+    ) {
+
+        val acao = when (novoStatus) {
+            StatusAgendamento.CONCLUIDO -> "concluir"
+            StatusAgendamento.CANCELADO -> "cancelar"
+            StatusAgendamento.AGENDADO -> return
+        }
+
+        AlertDialog.Builder(this)
+            .setTitle("Confirmar alteração")
+            .setMessage(
+                "Deseja realmente $acao o agendamento de ${agendamento.nomePet}?"
+            )
+            .setNegativeButton("Voltar", null)
+            .setPositiveButton("Confirmar") { _, _ ->
+
+                viewModel.alterarStatusAgendamento(
+                    agendamento,
+                    novoStatus
+                )
+            }
+            .show()
+    }
+
+    private fun aplicarTemaAgenda() {
+
+        val tema = appThemeRepository.tema.value
+
+        val corPrimaria = when (tema) {
+            AppColorTheme.ORIGINAL -> Color.rgb(184, 116, 91)
+            AppColorTheme.VERDE -> Color.rgb(56, 142, 108)
+            AppColorTheme.AZUL -> Color.rgb(57, 120, 184)
+        }
+
+        val corFundo = when (tema) {
+            AppColorTheme.ORIGINAL -> Color.rgb(250, 247, 243)
+            AppColorTheme.VERDE -> Color.rgb(247, 251, 248)
+            AppColorTheme.AZUL -> Color.rgb(247, 250, 254)
+        }
+
+        binding.root.setBackgroundColor(corFundo)
+
+        binding.btnNovoAgendamento.backgroundTintList =
+            ColorStateList.valueOf(corPrimaria)
+
+        window.statusBarColor = corPrimaria
+
+        montarCalendario()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        aplicarTemaAgenda()
     }
 }

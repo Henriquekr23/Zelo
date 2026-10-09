@@ -19,14 +19,21 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.zelo.model.Pet
 import com.example.zelo.ui.theme.*
+import com.example.zelo.data.repository.AppColorTheme
 
 @Composable
 fun PerfilScreen(
+    nomeTutor: String,
+    onSalvarNomeTutor: (String) -> Boolean,
     todosPets: List<Pet>,
-    petAtivo: Pet,
+    petAtivo: Pet?,
     onSelecionarPet: (Pet) -> Unit,
-    onAbrirMeusPets: () -> Unit = {}
+    onAbrirMeusPets: () -> Unit = {},
+    onAbrirHistorico: () -> Unit = {},
+    temaSelecionado: AppColorTheme,
+    onSelecionarTema: (AppColorTheme) -> Unit
 ) {
+
 
     Column(
         modifier = Modifier
@@ -34,7 +41,10 @@ fun PerfilScreen(
             .background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState())
     ) {
-        CabecalhoPerfil()
+        CabecalhoPerfil(
+            nomeTutor = nomeTutor,
+            onSalvarNomeTutor = onSalvarNomeTutor
+        )
 
         Column(modifier = Modifier.padding(20.dp)) {
             SecaoMeusPets(
@@ -44,7 +54,11 @@ fun PerfilScreen(
                 onAbrirMeusPets = onAbrirMeusPets
             )
             Spacer(modifier = Modifier.height(24.dp))
-            SecaoPreferencias()
+            SecaoPreferencias(
+                onAbrirHistorico = onAbrirHistorico,
+                temaSelecionado = temaSelecionado,
+                onSelecionarTema = onSelecionarTema
+            )
 
             Spacer(modifier = Modifier.height(32.dp))
             TextButton(
@@ -61,44 +75,160 @@ fun PerfilScreen(
 }
 
 @Composable
-private fun CabecalhoPerfil() {
+private fun CabecalhoPerfil(
+    nomeTutor: String,
+    onSalvarNomeTutor: (String) -> Boolean
+) {
+
+    var editarNome by remember {
+        mutableStateOf(false)
+    }
+
+    var nomeDigitado by remember(nomeTutor) {
+        mutableStateOf(nomeTutor)
+    }
+
+    var erro by remember {
+        mutableStateOf(false)
+    }
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.primary)
             .statusBarsPadding()
-            .padding(top = 24.dp, bottom = 32.dp),
+            .padding(
+                top = 24.dp,
+                bottom = 32.dp
+            ),
+
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+
         Box(
             modifier = Modifier
                 .size(80.dp)
-                .border(2.dp, Color.White.copy(alpha = 0.5f), CircleShape)
-                .padding(4.dp)
-                .clip(CircleShape)
-                .background(Color.Transparent),
+                .border(
+                    2.dp,
+                    Color.White.copy(alpha = 0.5f),
+                    CircleShape
+                )
+                .clip(CircleShape),
+
             contentAlignment = Alignment.Center
         ) {
+
             Text(
-                text = "CM",
+                text = nomeTutor
+                    .split(" ")
+                    .filter { it.isNotBlank() }
+                    .take(2)
+                    .mapNotNull { it.firstOrNull() }
+                    .joinToString("")
+                    .uppercase(),
+
                 color = MaterialTheme.colorScheme.onPrimary,
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold
             )
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(
+            modifier = Modifier.height(16.dp)
+        )
 
         Text(
-            text = "Camila Martins",
+            text = nomeTutor,
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onPrimary
         )
-        Text(
-            text = "(11) 98421-7730",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
+
+        Spacer(
+            modifier = Modifier.height(8.dp)
+        )
+
+        TextButton(
+            onClick = {
+                nomeDigitado = nomeTutor
+                erro = false
+                editarNome = true
+            }
+        ) {
+
+            Text(
+                text = "Editar nome",
+                color = MaterialTheme.colorScheme.onPrimary
+            )
+        }
+    }
+
+    if (editarNome) {
+
+        AlertDialog(
+            onDismissRequest = {
+                editarNome = false
+            },
+
+            title = {
+                Text("Editar nome do tutor")
+            },
+
+            text = {
+
+                OutlinedTextField(
+                    value = nomeDigitado,
+                    onValueChange = {
+                        nomeDigitado = it
+                        erro = false
+                    },
+                    label = {
+                        Text("Nome")
+                    },
+                    isError = erro,
+                    supportingText = {
+                        if (erro) {
+                            Text("Informe um nome válido.")
+                        }
+                    },
+                    singleLine = true
+                )
+            },
+
+            confirmButton = {
+
+                TextButton(
+                    onClick = {
+
+                        val nome = nomeDigitado.trim()
+
+                        if (nome.isBlank()) {
+                            erro = true
+                        } else {
+
+                            val salvo = onSalvarNomeTutor(nome)
+
+                            if (salvo) {
+                                editarNome = false
+                            } else {
+                                erro = true
+                            }
+                        }
+                    }
+                ) {
+                    Text("Salvar")
+                }
+            },
+
+            dismissButton = {
+
+                TextButton(
+                    onClick = {
+                        editarNome = false
+                    }
+                ) {
+                    Text("Cancelar")
+                }
+            }
         )
     }
 }
@@ -106,7 +236,7 @@ private fun CabecalhoPerfil() {
 @Composable
 private fun SecaoMeusPets(
     todosPets: List<Pet>,
-    petAtivo: Pet,
+    petAtivo: Pet?,
     onSelecionarPet: (Pet) -> Unit,
     onAbrirMeusPets: () -> Unit
 ) {
@@ -128,8 +258,18 @@ private fun SecaoMeusPets(
 
     Spacer(modifier = Modifier.height(8.dp))
 
+    if (todosPets.isEmpty()) {
+
+        Text(
+            text = "Nenhum animal cadastrado.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(vertical = 16.dp)
+        )
+    }
+
     todosPets.forEach { pet ->
-        val isAtivo = pet.id == petAtivo.id
+        val isAtivo = pet.id == petAtivo?.id
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -181,7 +321,11 @@ private fun SecaoMeusPets(
 }
 
 @Composable
-private fun SecaoPreferencias() {
+private fun SecaoPreferencias(
+    onAbrirHistorico: () -> Unit,
+    temaSelecionado: AppColorTheme,
+    onSelecionarTema: (AppColorTheme) -> Unit
+) {
     Text(
         text = "Preferências",
         style = MaterialTheme.typography.titleMedium,
@@ -195,17 +339,118 @@ private fun SecaoPreferencias() {
     ) {
         Column {
 
+            var mostrarDialogoTemas by remember {
+                mutableStateOf(false)
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        mostrarDialogoTemas = true
+                    }
+                    .padding(16.dp),
+
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+
+                Text(
+                    text = "🎨 Tema do aplicativo",
+                    fontWeight = FontWeight.Medium
+                )
+
+                Text(
+                    text = when (temaSelecionado) {
+                        AppColorTheme.ORIGINAL -> "Original"
+                        AppColorTheme.VERDE -> "Verde"
+                        AppColorTheme.AZUL -> "Azul"
+                    },
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            if (mostrarDialogoTemas) {
+
+                AlertDialog(
+                    onDismissRequest = {
+                        mostrarDialogoTemas = false
+                    },
+
+                    title = {
+                        Text("Escolha o tema")
+                    },
+
+                    text = {
+
+                        Column {
+
+                            AppColorTheme.entries.forEach { tema ->
+
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+
+                                            onSelecionarTema(tema)
+
+                                            mostrarDialogoTemas = false
+                                        }
+                                        .padding(vertical = 12.dp),
+
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+
+                                    RadioButton(
+                                        selected = tema == temaSelecionado,
+
+                                        onClick = {
+
+                                            onSelecionarTema(tema)
+
+                                            mostrarDialogoTemas = false
+                                        }
+                                    )
+
+                                    Text(
+                                        text = when (tema) {
+                                            AppColorTheme.ORIGINAL -> "Original"
+                                            AppColorTheme.VERDE -> "Verde"
+                                            AppColorTheme.AZUL -> "Azul"
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    },
+
+                    confirmButton = {
+
+                        TextButton(
+                            onClick = {
+                                mostrarDialogoTemas = false
+                            }
+                        ) {
+                            Text("Fechar")
+                        }
+                    }
+                )
+            }
+
             var whatsappAtivo by remember { mutableStateOf(true) }
             Row(
                 modifier = Modifier.fillMaxWidth().padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(text = "🔔 Lembretes via WhatsApp", fontWeight = FontWeight.Medium)
+                Text(text = "🔔 Lembretes via WhatsApp (em breve)", fontWeight = FontWeight.Medium)
                 Switch(
-                    checked = whatsappAtivo,
-                    onCheckedChange = { whatsappAtivo = it },
-                    colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary)
+                    checked = false,
+                    onCheckedChange = null,
+                    enabled = false,
+                    colors = SwitchDefaults.colors(
+                        checkedTrackColor = MaterialTheme.colorScheme.primary
+                    )
                 )
             }
 
@@ -216,8 +461,7 @@ private fun SecaoPreferencias() {
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable {
-                        // TODO (André, Isa ou Henrique): Coloque aqui a Intent para abrir a HistoricoActivity
-                        // startActivity(Intent(context, HistoricoActivity::class.java))
+                        onAbrirHistorico()
                     }
                     .padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -235,7 +479,7 @@ private fun SecaoPreferencias() {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(text = "🏥 Clínica: Vida Animal", fontWeight = FontWeight.Medium)
+                Text(text = "🏥 Clínica: Fulano (em breve)", fontWeight = FontWeight.Medium)
                 Text(text = ">", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
