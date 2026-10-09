@@ -38,36 +38,141 @@ import com.example.zelo.model.Procedimento
 import com.example.zelo.model.TipoProcedimento
 import com.example.zelo.ui.theme.ZeloTheme
 import com.example.zelo.viewmodel.HistoricoUiState
+import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import com.example.zelo.model.Agendamento
 
 @Composable
 fun HistoricoScreen(
-    uiState: HistoricoUiState
+    uiState: HistoricoUiState,
+    onSelecionarPet: (Int) -> Unit
 ) {
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState())
     ) {
-        CabecalhoHistorico(uiState.petAtivo)
 
-        Column(modifier = Modifier.padding(20.dp)) {
+        val pet = uiState.petAtivo
+
+        if (uiState.carregando) {
+
+            Text(
+                text = "Carregando histórico...",
+                modifier = Modifier.padding(24.dp)
+            )
+
+            return@Column
+        }
+
+        if (pet == null) {
+
+            Text(
+                text = "Nenhum animal cadastrado.",
+                modifier = Modifier.padding(24.dp)
+            )
+
+            return@Column
+        }
+
+        CabecalhoHistorico(pet)
+
+        Column(
+            modifier = Modifier.padding(20.dp)
+        ) {
+
+            var menuExpandido by remember {
+                mutableStateOf(false)
+            }
+
+            Box {
+
+                TextButton(
+                    onClick = {
+                        menuExpandido = true
+                    }
+                ) {
+                    Text(
+                        text = "Animal: ${pet.emoji} ${pet.nome} ▼"
+                    )
+                }
+
+                DropdownMenu(
+                    expanded = menuExpandido,
+                    onDismissRequest = {
+                        menuExpandido = false
+                    }
+                ) {
+
+                    uiState.pets.forEach { animal ->
+
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    "${animal.emoji} ${animal.nome}"
+                                )
+                            },
+                            onClick = {
+
+                                menuExpandido = false
+
+                                onSelecionarPet(animal.id)
+                            }
+                        )
+                    }
+                }
+            }
+
+            Spacer(
+                modifier = Modifier.height(16.dp)
+            )
+
             Text(
                 text = "Histórico clínico",
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier.semantics { heading() }
+                fontWeight = FontWeight.Bold
             )
 
-            Spacer(modifier = Modifier.height(ZeloTheme.spacing.lg))
+            Spacer(
+                modifier = Modifier.height(8.dp)
+            )
 
-            uiState.historico.forEachIndexed { indice, procedimento ->
-                ProcedimentoHistoricoCard(
-                    procedimento = procedimento,
-                    primeiro = indice == 0,
-                    ultimo = indice == uiState.historico.lastIndex
+            Text(
+                text = "${uiState.historico.size} atendimentos concluídos",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Spacer(
+                modifier = Modifier.height(20.dp)
+            )
+
+            if (uiState.historico.isEmpty()) {
+
+                Text(
+                    text = "Nenhum atendimento concluído para ${pet.nome}.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+
+            } else {
+
+                uiState.historico.forEachIndexed { indice, agendamento ->
+
+                    ProcedimentoHistoricoCard(
+                        agendamento = agendamento,
+                        primeiro = indice == 0,
+                        ultimo = indice == uiState.historico.lastIndex
+                    )
+                }
             }
         }
     }
@@ -139,10 +244,11 @@ private fun CabecalhoHistorico(pet: Pet) {
 
 @Composable
 private fun ProcedimentoHistoricoCard(
-    procedimento: Procedimento,
+    agendamento: Agendamento,
     primeiro: Boolean,
     ultimo: Boolean
 ) {
+
     val corMarcador = MaterialTheme.colorScheme.primary
     val corLinha = MaterialTheme.colorScheme.outlineVariant
 
@@ -151,19 +257,31 @@ private fun ProcedimentoHistoricoCard(
             .fillMaxWidth()
             .height(IntrinsicSize.Min)
     ) {
+
         Canvas(
             modifier = Modifier
                 .width(16.dp)
                 .fillMaxHeight()
         ) {
-            val centro = Offset(size.width / 2, 24.dp.toPx())
+
+            val centro = Offset(
+                size.width / 2,
+                24.dp.toPx()
+            )
 
             drawLine(
                 color = corLinha,
-                start = Offset(centro.x, if (primeiro) centro.y else 0f),
-                end = Offset(centro.x, if (ultimo) centro.y else size.height),
+                start = Offset(
+                    centro.x,
+                    if (primeiro) centro.y else 0f
+                ),
+                end = Offset(
+                    centro.x,
+                    if (ultimo) centro.y else size.height
+                ),
                 strokeWidth = 2.dp.toPx()
             )
+
             drawCircle(
                 color = corMarcador,
                 radius = 5.dp.toPx(),
@@ -171,36 +289,41 @@ private fun ProcedimentoHistoricoCard(
             )
         }
 
-        Spacer(modifier = Modifier.width(ZeloTheme.spacing.md))
+        Spacer(
+            modifier = Modifier.width(16.dp)
+        )
 
         Card(
             modifier = Modifier
                 .weight(1f)
-                .padding(bottom = ZeloTheme.spacing.lg)
-                .semantics(mergeDescendants = true) { },
+                .padding(bottom = 16.dp),
+
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surface
             )
         ) {
+
             Column(
-                modifier = Modifier.padding(ZeloTheme.spacing.lg),
-                verticalArrangement = Arrangement.spacedBy(ZeloTheme.spacing.sm)
+                modifier = Modifier.padding(16.dp),
+
+                verticalArrangement =
+                    Arrangement.spacedBy(8.dp)
             ) {
+
                 Text(
-                    text = when (procedimento.tipo) {
-                        TipoProcedimento.CONSULTA -> "Consulta"
-                        TipoProcedimento.VACINA -> "Vacina"
-                        TipoProcedimento.VERMIFUGO -> "Vermífugo"
-                    },
+                    text = "ATENDIMENTO CONCLUÍDO",
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary
                 )
+
                 Text(
-                    text = procedimento.descricao,
-                    style = MaterialTheme.typography.bodyLarge
+                    text = agendamento.descricao,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium
                 )
+
                 Text(
-                    text = procedimento.data,
+                    text = "${agendamento.data} • ${agendamento.horario}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
