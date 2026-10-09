@@ -12,7 +12,8 @@ import com.example.zelo.model.StatusAgendamento
 
 class AgendaAdapter(
     context: Context,
-    agendamentos: List<Agendamento>
+    agendamentos: List<Agendamento>,
+    private val onEditarAgendamento: (Agendamento) -> Unit
 ) : ArrayAdapter<Agendamento>(
     context,
     0,
@@ -24,6 +25,7 @@ class AgendaAdapter(
         convertView: View?,
         parent: ViewGroup
     ): View {
+
         val view = convertView ?: LayoutInflater
             .from(context)
             .inflate(
@@ -54,6 +56,10 @@ class AgendaAdapter(
             StatusAgendamento.AGENDADO -> "CONFIRMADO"
             StatusAgendamento.CONCLUIDO -> "CONCLUÍDO"
             StatusAgendamento.CANCELADO -> "CANCELADO"
+        }
+
+        view.setOnClickListener {
+            onEditarAgendamento(agendamento)
         }
 
         return view

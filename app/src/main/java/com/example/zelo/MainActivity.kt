@@ -316,14 +316,21 @@ class MainActivity : ComponentActivity() {
                                             _telaAtual.value = "perfil"
                                         },
                                         uiState = uiState,
-                                        onAbrirAgenda = {
+                                        onAbrirAgenda = { dataAgendamento ->
 
-                                            startActivity(
-                                                Intent(
-                                                    this@MainActivity,
-                                                    AgendaActivity::class.java
-                                                )
+                                            val agendaIntent = Intent(
+                                                this@MainActivity,
+                                                AgendaActivity::class.java
                                             )
+
+                                            if (!dataAgendamento.isNullOrBlank()) {
+                                                agendaIntent.putExtra(
+                                                    "DATA_AGENDAMENTO",
+                                                    dataAgendamento
+                                                )
+                                            }
+
+                                            startActivity(agendaIntent)
                                         },
                                         onAbrirMeusPets = {
 

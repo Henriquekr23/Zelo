@@ -37,6 +37,8 @@ import android.content.res.ColorStateList
 import android.graphics.Color
 import com.example.zelo.data.repository.AppColorTheme
 import android.graphics.drawable.GradientDrawable
+import androidx.appcompat.app.AlertDialog
+import com.example.zelo.model.StatusAgendamento
 
 class AgendaActivity : AppCompatActivity() {
 
@@ -100,8 +102,13 @@ class AgendaActivity : AppCompatActivity() {
                 return@registerForActivityResult
             }
 
+            val idAgendamento = dados.getIntExtra(
+                "AGENDAMENTO_ID",
+                0
+            )
+
             val agendamento = Agendamento(
-                id = 0,
+                id = idAgendamento,
                 petId = petId,
                 nomePet = nomePet,
                 data = dados.getStringExtra("DATA").orEmpty(),
@@ -109,7 +116,21 @@ class AgendaActivity : AppCompatActivity() {
                 descricao = dados.getStringExtra("DESCRICAO").orEmpty()
             )
 
-            viewModel.adicionarAgendamento(agendamento)
+            if (idAgendamento > 0) {
+
+                viewModel.editarAgendamento(
+                    id = idAgendamento,
+                    petId = petId,
+                    nomePet = nomePet,
+                    data = agendamento.data,
+                    horario = agendamento.horario,
+                    descricao = agendamento.descricao
+                )
+
+            } else {
+
+                viewModel.adicionarAgendamento(agendamento)
+            }
 
             dataSelecionadaAtual = agendamento.data
 
@@ -125,14 +146,15 @@ class AgendaActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        binding =
-            ActivityAgendaBinding.inflate(layoutInflater)
+        binding = ActivityAgendaBinding.inflate(layoutInflater)
 
         setContentView(binding.root)
 
         configurarEventos()
         configurarObservadores()
         configurarBarraNavegacao()
+
+        configurarDataInicial()
     }
 
     private fun configurarBarraNavegacao() {
@@ -259,7 +281,10 @@ class AgendaActivity : AppCompatActivity() {
             binding.listViewAgendamentos.adapter =
                 AgendaAdapter(
                     context = this,
-                    agendamentos = agendamentos
+                    agendamentos = agendamentos,
+                    onEditarAgendamento = { agendamento ->
+                        exibirOpcoesAgendamento(agendamento)
+                    }
                 )
         }
     }
@@ -542,6 +567,136 @@ class AgendaActivity : AppCompatActivity() {
         return (
                 this * resources.displayMetrics.density
                 ).toInt()
+    }
+
+    private fun configurarDataInicial() {
+
+        val hoje = formatoData.format(Calendar.getInstance().time)
+        val dataRecebida = intent.getStringExtra("DATA_AGENDAMENTO")
+
+        val dataInicial = if (dataRecebida.isNullOrBlank()) {
+            hoje
+        } else {
+            val dataValida = try {
+                formatoData.parse(dataRecebida)
+            } catch (_: Exception) {
+                null
+            }
+
+            if (dataValida != null && formatoData.format(dataValida) == dataRecebida) {
+                dataRecebida
+            } else {
+                hoje
+            }
+        }
+
+        dataSelecionadaAtual = dataInicial
+        reposicionarCalendario(dataInicial)
+
+        binding.txtDataSelecionada.text = formatarDataCabecalho(dataInicial)
+        montarCalendario()
+
+        viewModel.carregarAgendamentos(dataInicial)
+    }
+
+    private fun abrirEdicaoAgendamento(agendamento: Agendamento) {
+
+        val intent = Intent(
+            this,
+            NovoAgendamentoActivity::class.java
+        ).apply {
+            putExtra("EDITAR_AGENDAMENTO", true)
+            putExtra("AGENDAMENTO_ID", agendamento.id)
+            putExtra("PET_ID_SELECIONADO", agendamento.petId)
+            putExtra("DATA_SELECIONADA", agendamento.data)
+            putExtra("HORARIO_SELECIONADO", agendamento.horario)
+            putExtra("DESCRICAO_SELECIONADA", agendamento.descricao)
+        }
+
+        novoAgendamentoLauncher.launch(intent)
+    }
+
+    private fun exibirOpcoesAgendamento(
+        agendamento: Agendamento
+    ) {
+
+        if (agendamento.status != StatusAgendamento.AGENDADO) {
+
+            val status = when (agendamento.status) {
+                StatusAgendamento.CONCLUIDO -> "Concluído"
+                StatusAgendamento.CANCELADO -> "Cancelado"
+                StatusAgendamento.AGENDADO -> "Agendado"
+            }
+
+            AlertDialog.Builder(this)
+                .setTitle("Agendamento de ${agendamento.nomePet}")
+                .setMessage(
+                    "${agendamento.descricao}\n" +
+                            "${agendamento.data} às ${agendamento.horario}\n\n" +
+                            "Status: $status"
+                )
+                .setPositiveButton("Fechar", null)
+                .show()
+
+            return
+        }
+
+        val opcoes = arrayOf(
+            "Marcar como concluído",
+            "Alterar agendamento",
+            "Cancelar agendamento"
+        )
+
+        AlertDialog.Builder(this)
+            .setTitle("Agendamento de ${agendamento.nomePet}")
+            .setItems(opcoes) { _, posicao ->
+
+                when (posicao) {
+
+                    0 -> confirmarAlteracaoStatus(
+                        agendamento,
+                        StatusAgendamento.CONCLUIDO
+                    )
+
+                    1 -> abrirEdicaoAgendamento(
+                        agendamento
+                    )
+
+                    2 -> confirmarAlteracaoStatus(
+                        agendamento,
+                        StatusAgendamento.CANCELADO
+                    )
+                }
+            }
+            .setNegativeButton("Voltar", null)
+            .show()
+    }
+
+    private fun confirmarAlteracaoStatus(
+        agendamento: Agendamento,
+        novoStatus: StatusAgendamento
+    ) {
+
+        val acao = when (novoStatus) {
+            StatusAgendamento.CONCLUIDO -> "concluir"
+            StatusAgendamento.CANCELADO -> "cancelar"
+            StatusAgendamento.AGENDADO -> return
+        }
+
+        AlertDialog.Builder(this)
+            .setTitle("Confirmar alteração")
+            .setMessage(
+                "Deseja realmente $acao o agendamento de ${agendamento.nomePet}?"
+            )
+            .setNegativeButton("Voltar", null)
+            .setPositiveButton("Confirmar") { _, _ ->
+
+                viewModel.alterarStatusAgendamento(
+                    agendamento,
+                    novoStatus
+                )
+            }
+            .show()
     }
 
     private fun aplicarTemaAgenda() {

@@ -1,4 +1,3 @@
-
 package com.example.zelo.ui.home
 
 import androidx.compose.foundation.background
@@ -62,7 +61,7 @@ fun InicioScreen(
     uiState: InicioUiState,
     nomeTutor: String,
     onEditarPerfil: () -> Unit,
-    onAbrirAgenda: () -> Unit,
+    onAbrirAgenda: (String?) -> Unit,
     onAbrirMeusPets: () -> Unit,
     onNavegarParaTela: (String) -> Unit,
     onSelecionarPet: (Pet) -> Unit
@@ -92,7 +91,9 @@ fun InicioScreen(
             // Próximo lembrete real
             LembreteCard(
                 procedimento = uiState.proximoLembrete,
-                onClick = onAbrirAgenda
+                onClick = {
+                    onAbrirAgenda(uiState.proximoLembrete?.data)
+                }
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -108,7 +109,7 @@ fun InicioScreen(
             Spacer(modifier = Modifier.height(12.dp))
 
             GridAcoesRapidas(
-                onAbrirAgenda = onAbrirAgenda,
+                onAbrirAgenda = { onAbrirAgenda(null) },
                 onAbrirMeusPets = onAbrirMeusPets,
                 onNavegarParaTela = onNavegarParaTela
             )
@@ -129,7 +130,7 @@ fun InicioScreen(
                 )
 
                 TextButton(
-                    onClick = onAbrirAgenda
+                    onClick = { onAbrirAgenda(null) }
                 ) {
                     Text("Ver tudo")
                 }
@@ -181,7 +182,7 @@ fun InicioScreen(
 
                     CuidadoCard(
                         procedimento = procedimento,
-                        onClick = onAbrirAgenda
+                        onClick = { onAbrirAgenda(procedimento.data) }
                     )
 
                     Spacer(
@@ -193,7 +194,7 @@ fun InicioScreen(
             Spacer(modifier = Modifier.height(20.dp))
 
             Button(
-                onClick = onAbrirAgenda,
+                onClick = { onAbrirAgenda(null) },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Agendar consulta")
@@ -780,3 +781,4 @@ private fun textoPrazo(data: String): String {
         else -> "Há ${-dias} dias"
     }
 }
+
