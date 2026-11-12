@@ -36,14 +36,12 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.example.zelo.model.Pet
 import com.example.zelo.ui.historico.HistoricoScreen
 import com.example.zelo.ui.home.InicioScreen
-import com.example.zelo.ui.lembretes.LembretesScreen
 import com.example.zelo.ui.perfil.PerfilScreen
 import com.example.zelo.ui.splash.ZeloSplashScreen
 import com.example.zelo.ui.theme.ZeloTheme
 import com.example.zelo.viewmodel.AppThemeViewModel
 import com.example.zelo.viewmodel.HistoricoViewModel
 import com.example.zelo.viewmodel.InicioViewModel
-import com.example.zelo.viewmodel.LembretesViewModel
 import com.example.zelo.viewmodel.PetsViewModel
 import com.example.zelo.viewmodel.TutorViewModel
 import kotlinx.coroutines.delay
@@ -53,7 +51,6 @@ class MainActivity : ComponentActivity() {
     private val appThemeViewModel: AppThemeViewModel by viewModels()
     private val viewModel: InicioViewModel by viewModels()
     private val historicoViewModel: HistoricoViewModel by viewModels()
-    private val lembretesViewModel: LembretesViewModel by viewModels()
     private val petsViewModel: PetsViewModel by viewModels()
     private val tutorViewModel: TutorViewModel by viewModels()
 
@@ -135,9 +132,6 @@ class MainActivity : ComponentActivity() {
 
                     val historicoUiState by
                     historicoViewModel.uiState
-
-                    val lembretesUiState by
-                    lembretesViewModel.uiState
 
                     val telaAtual by _telaAtual
 
@@ -383,11 +377,17 @@ class MainActivity : ComponentActivity() {
                                         }
                                     )
 
-                                    "lembretes" -> LembretesScreen(
-                                        uiState = lembretesUiState
-                                    )
+                                    "lembretes" -> {
+                                        LaunchedEffect(Unit) {
+                                            startActivity(Intent(this@MainActivity, WhatsAppActivity::class.java))
+                                            _telaAtual.value = "inicio"
+                                        }
+                                    }
 
                                     "perfil" -> PerfilScreen(
+                                        onAbrirWhatsApp = {
+                                            startActivity(Intent(this@MainActivity, WhatsAppActivity::class.java))
+                                        },
                                         temaSelecionado = temaSelecionado,
                                         onSelecionarTema = { novoTema ->
 

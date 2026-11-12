@@ -53,7 +53,7 @@ class AgendaAdapter(
             "${agendamento.nomePet} • ${agendamento.data}"
 
         txtStatus.text = when (agendamento.status) {
-            StatusAgendamento.AGENDADO -> "CONFIRMADO"
+            StatusAgendamento.AGENDADO -> "AGENDADO"
             StatusAgendamento.CONCLUIDO -> "CONCLUÍDO"
             StatusAgendamento.CANCELADO -> "CANCELADO"
         }
