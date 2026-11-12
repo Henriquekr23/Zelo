@@ -100,7 +100,7 @@ def message(session, clinic, item):
     payload = button.get("payload") or interactive.get("id") or ""
     original = text or button.get("text") or interactive.get("title") or "[unsupported message]"
     interpretation = "human_required"
-    if reminder and valid and clinic.enabled:
+    if reminder and valid and clinic.enabled and reminder.appointment_id:
         parts = payload.split(":")
         if len(parts) == 3 and parts[:2] == ["zelo", reminder.id] and parts[2] in ("confirm", "reschedule", "cancel"):
             interpretation = parts[2]

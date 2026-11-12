@@ -31,6 +31,12 @@ def serialize(row):
     return {"id": row.id, "kind": row.kind, "version": row.version, "data": row.data}
 
 
+class TutorDeactivationBlocked(HTTPException):
+    def __init__(self, tutor_id):
+        super().__init__(409, "Transfer pet responsibility to an active tutor before deactivation")
+        self.tutor_id = tutor_id
+
+
 def mutate(session, principal, mutation):
     clinic_lock(session, principal.clinic_id)
     existing = session.get(Record, str(mutation.id))
@@ -44,6 +50,11 @@ def mutate(session, principal, mutation):
         raise HTTPException(409, detail={"message": "Version conflict",
                                         "server": serialize(existing) if existing else None})
     if mutation.kind == "tutor":
+        if existing and not data["active"]:
+            pets = session.scalars(select(Record).where(
+                Record.clinic_id == principal.clinic_id, Record.kind == "pet")).all()
+            if any(pet.data["tutor_id"] == existing.id for pet in pets):
+                raise TutorDeactivationBlocked(existing.id)
         if data["consent"] and (not data["phone"] or not data["consent_source"].strip()):
             raise HTTPException(422, "Consent requires phone and evidence source")
         if data["phone"]:
@@ -132,6 +143,33 @@ def eligible(session, reminder):
         and re.fullmatch(r"\+[1-9][0-9]{7,14}", tutor.data.get("phone", ""))
     )
     return bool(valid), tutor, pet, procedure
+
+
+def prepare_delivery(session, reminder):
+    """Keep the clinical occurrence; strip consultation actions if its slot is no longer valid.
+
+    Only the reminder's association is detached. The immutable procedure retains
+    the original appointment and the clinical due date for audit and follow-up.
+    The caller owns a SQLite write transaction, including the pre-dispatch recheck.
+    """
+    if not reminder.appointment_id:
+        return "clinical_due"
+    original_id = reminder.appointment_id
+    appointment = session.get(Record, original_id)
+    if not appointment or appointment.clinic_id != reminder.clinic_id or appointment.kind != "appointment":
+        reason = "appointment_unavailable"
+    elif appointment.data["status"] != "AGENDADO":
+        reason = "appointment_" + appointment.data["status"].lower()
+    elif (appointment.data["pet_id"] != reminder.pet_id
+          or appointment.data["tutor_id"] != reminder.tutor_id
+          or appointment.data["date"] != reminder.due_on.isoformat()):
+        reason = "appointment_context_changed"
+    else:
+        return "appointment_confirmation"
+    reminder.appointment_id = None
+    audit(session, reminder.clinic_id, "worker", "confirmation_removed", reminder.id,
+          appointment_id=original_id, reason=reason, clinical_due_preserved=True)
+    return "clinical_due"
 
 
 def ticket(session, clinic_id, reminder_id, reason):

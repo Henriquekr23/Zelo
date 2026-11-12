@@ -11,7 +11,7 @@ from .config import settings
 from .db import transaction
 from .models import Audit, Clinic, Communication, Record, Reminder, Ticket
 from .schemas import ClinicPreferences, Mutation, Resolution
-from .service import audit, clinic_lock, mutate, serialize
+from .service import TutorDeactivationBlocked, audit, clinic_lock, mutate, serialize
 from .webhooks import process, valid_signature
 
 app = FastAPI(title="Zelo WhatsApp integration", version="0.1.0")
@@ -36,6 +36,13 @@ def put_record(body: Mutation, principal=Depends(authenticate)):
     try:
         with transaction() as session:
             return mutate(session, principal, body)
+    except TutorDeactivationBlocked as failure:
+        # The record transaction rolled back. Persist only the rejected decision,
+        # never a partial tutor change, in a separate audit transaction.
+        with transaction() as session:
+            audit(session, principal.clinic_id, principal.actor, "tutor_deactivation_rejected",
+                  failure.tutor_id, reason="active_responsibility_required")
+        raise failure
     except ValidationError:
         raise HTTPException(422, "Invalid record data") from None
 

@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     meta_verify_token: str = ""
     graph_version: str = "v25.0"
     template_name: str = "zelo_cuidado_recorrente"
+    due_template_name: str = ""
     template_language: str = "pt_BR"
     max_attempts: int = 5
     retry_seconds: int = 300

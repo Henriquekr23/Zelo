@@ -20,6 +20,9 @@ class MetaProvider:
         c = self.config
         if c.provider != "meta" or clinic.phone_number_id != c.meta_phone_number_id:
             raise DeliveryError("provider_not_configured")
+        template_name = c.template_name if reminder.appointment_id else c.due_template_name
+        if not template_name:
+            raise DeliveryError("due_template_not_configured")
         components = [{
             "type": "body", "parameters": [
                 {"type": "text", "text": value} for value in (
@@ -28,7 +31,8 @@ class MetaProvider:
                 )
             ],
         }]
-        for index, action in enumerate(("confirm", "reschedule", "cancel")):
+        actions = ("confirm", "reschedule", "cancel") if reminder.appointment_id else ()
+        for index, action in enumerate(actions):
             components.append({
                 "type": "button", "sub_type": "quick_reply", "index": str(index),
                 "parameters": [{"type": "payload", "payload": f"zelo:{reminder.id}:{action}"}],
@@ -37,7 +41,7 @@ class MetaProvider:
             "messaging_product": "whatsapp",
             "to": tutor.data["phone"].lstrip("+"), "type": "template",
             "biz_opaque_callback_data": reminder.id,
-            "template": {"name": c.template_name,
+            "template": {"name": template_name,
                          "language": {"code": c.template_language}, "components": components},
         }
         try:

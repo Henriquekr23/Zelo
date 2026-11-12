@@ -43,6 +43,7 @@ def setup(monkeypatch):
     engine = create_engine("sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool)
     Base.metadata.create_all(engine)
     monkeypatch.setattr(db, "Session", sessionmaker(engine, expire_on_commit=False))
+    monkeypatch.setenv("PROVIDER", "mock")
     monkeypatch.setenv("META_APP_SECRET", "test-secret")
     monkeypatch.setenv("META_VERIFY_TOKEN", "verify-secret")
     monkeypatch.setenv("PRINCIPALS_JSON", json.dumps([{
@@ -67,7 +68,7 @@ def put(client, kind, data, id=None, version=0):
                                         "base_version": version, "data": data})
 
 
-def seed(client, interval=30, consent=True):
+def seed(client, interval=30, consent=True, linked=True):
     tutor = put(client, "tutor", {"name": "Carlos", "phone": PHONE,
                                  "consent": consent, "consent_source": "signed_form_v1"}).json()
     pet = put(client, "pet", {"name": "Thor", "tutor_id": tutor["id"]}).json()
@@ -78,7 +79,7 @@ def seed(client, interval=30, consent=True):
     procedure = put(client, "procedure", {
         "pet_id": pet["id"], "tutor_id": tutor["id"], "description": "Vacina",
         "performed_on": (TODAY - timedelta(days=23)).isoformat(), "interval_days": interval,
-        "source_appointment_id": source["id"], "appointment_id": followup["id"],
+        "source_appointment_id": source["id"], "appointment_id": followup["id"] if linked else None,
     }).json()
     assert "id" in procedure, procedure
     return tutor, pet, procedure, followup
@@ -223,8 +224,8 @@ def test_phone_and_consent_validation(setup, field, value):
 
 
 def test_inactive_tutor_and_revocation(setup):
-    tutor, *_ = seed(setup)
-    put(setup, "tutor", {**tutor["data"], "active": False}, tutor["id"], tutor["version"])
+    # An inactive tutor is allowed only while no pet depends on that tutor.
+    tutor = put(setup, "tutor", {"name": "Inactive", "active": False}).json()
     assert put(setup, "pet", {"name": "Blocked", "tutor_id": tutor["id"]}).status_code == 422
     provider = FakeProvider()
     tick(provider=provider, instant=INSTANT)
@@ -365,3 +366,178 @@ def test_invalid_timezone_and_stale_creation(setup):
     _, _, _, appointment = seed(setup)
     assert put(setup, "appointment", appointment["data"], version=9).status_code == 409
 
+
+@pytest.mark.parametrize("status,linked,expected_kind", [
+    ("AGENDADO", True, "appointment_confirmation"),
+    ("CANCELADO", True, "clinical_due"),
+    ("CONCLUIDO", True, "clinical_due"),
+    ("AGENDADO", False, "clinical_due"),
+])
+def test_clinical_due_survives_closed_or_missing_slot(setup, status, linked, expected_kind):
+    _, _, procedure, appointment = seed(setup, linked=linked)
+    if status != "AGENDADO":
+        result = put(setup, "appointment", {**appointment["data"], "status": status},
+                     appointment["id"], appointment["version"])
+        assert result.status_code == 200
+    tick(instant=INSTANT)  # configured PROVIDER=mock, not a real HTTP request
+    tick(instant=INSTANT)
+    history = setup.get("/v1/communications").json()
+    assert len(history["reminders"]) == len(history["messages"]) == 1
+    reminder = history["reminders"][0]
+    assert reminder["state"] == "simulated"
+    assert reminder["due_on"] == (TODAY + timedelta(days=7)).isoformat()
+    assert bool(reminder["appointment_id"]) == (expected_kind == "appointment_confirmation")
+    outbound = json.loads(history["messages"][0]["text"])
+    assert outbound["kind"] == expected_kind
+    remote = {r["id"]: r for r in setup.get("/v1/records").json()}
+    assert remote[procedure["id"]] == procedure  # recurrence and original association remain intact
+    assert remote[appointment["id"]]["data"]["status"] == status
+    decisions = [a for a in setup.get("/v1/audit").json() if a["action"] == "confirmation_removed"]
+    assert len(decisions) == (1 if linked and status != "AGENDADO" else 0)
+
+
+def test_meta_due_only_template_has_no_attendance_buttons(setup, monkeypatch):
+    _, _, _, appointment = seed(setup)
+    assert put(setup, "appointment", {**appointment["data"], "status": "CANCELADO"},
+               appointment["id"], 1).status_code == 200
+    captured = []
+    def post(url, **kwargs):
+        captured.append(kwargs["json"])
+        return httpx.Response(200, json={"messages": [{"id": "wamid.due"}]})
+    monkeypatch.setattr(httpx, "post", post)
+    config = Settings(provider="meta", meta_access_token="fake", meta_app_secret="fake",
+                      meta_verify_token="fake", meta_phone_number_id="phone",
+                      due_template_name="approved_due_only")
+    tick(config=config, provider=MetaProvider(config), instant=INSTANT)
+    assert captured[0]["template"]["name"] == "approved_due_only"
+    assert [c["type"] for c in captured[0]["template"]["components"]] == ["body"]
+
+
+def test_missing_due_template_fails_closed_without_sending(setup, monkeypatch):
+    seed(setup, linked=False)
+    def forbidden(*args, **kwargs):
+        pytest.fail("Missing template must not cause a Meta request")
+    monkeypatch.setattr(httpx, "post", forbidden)
+    config = Settings(provider="meta", meta_access_token="fake", meta_app_secret="fake",
+                      meta_verify_token="fake", meta_phone_number_id="phone",
+                      due_template_name="")
+    tick(config=config, provider=MetaProvider(config), instant=INSTANT)
+    assert snapshot()[0].state == "failed"
+    assert snapshot()[0].error == "due_template_not_configured"
+
+
+def test_cancelled_during_preflight_never_sends_confirmation(setup, monkeypatch):
+    from zelo import worker
+    from zelo.service import eligible as original
+    _, _, _, appointment = seed(setup)
+    calls = 0
+    def cancel_before_dispatch(session, reminder):
+        nonlocal calls
+        calls += 1
+        if calls == 3:  # scan, claim, then locked pre-dispatch revalidation
+            row = session.get(Record, appointment["id"])
+            row.data = {**row.data, "status": "CANCELADO"}
+            row.version += 1
+        return original(session, reminder)
+    monkeypatch.setattr(worker, "eligible", cancel_before_dispatch)
+    tick(instant=INSTANT)
+    message = setup.get("/v1/communications").json()["messages"][0]
+    assert json.loads(message["text"])["kind"] == "clinical_due"
+
+
+@pytest.mark.parametrize("action", ["confirm", "cancel", "reschedule"])
+def test_late_response_cannot_reopen_cancelled_appointment(setup, action):
+    _, _, procedure, appointment = seed(setup)
+    tick(instant=INSTANT)
+    cancelled = put(setup, "appointment", {**appointment["data"], "status": "CANCELADO"},
+                    appointment["id"], 1).json()
+    message = reply(snapshot()[0], action)
+    assert webhook(setup, message).status_code == 200
+    assert webhook(setup, message).status_code == 200
+    remote = {r["id"]: r for r in setup.get("/v1/records").json()}
+    assert remote[appointment["id"]] == cancelled
+    assert remote[procedure["id"]] == procedure
+    history = setup.get("/v1/communications").json()
+    assert len(history["tickets"]) == 1
+    assert history["tickets"][0]["reason"] == "appointment_already_closed"
+    assert sum(m["direction"] == "inbound" for m in history["messages"]) == 1
+
+
+def test_due_only_reply_goes_to_human_without_attendance_change(setup):
+    _, _, _, appointment = seed(setup, linked=False)
+    tick(instant=INSTANT)
+    assert webhook(setup, reply(snapshot()[0], "confirm")).status_code == 200
+    remote = next(r for r in setup.get("/v1/records").json() if r["id"] == appointment["id"])
+    assert remote == appointment
+    history = setup.get("/v1/communications").json()
+    assert history["messages"][-1]["interpretation"] == "human_required"
+    assert history["tickets"][0]["reason"] == "unrecognized_response"
+
+
+def test_deactivate_tutor_without_pets(setup):
+    tutor = put(setup, "tutor", {"name": "No dependents"}).json()
+    changed = put(setup, "tutor", {**tutor["data"], "active": False}, tutor["id"], 1)
+    assert changed.status_code == 200
+    assert changed.json()["data"]["active"] is False
+    assert changed.json()["version"] == 2
+    assert put(setup, "pet", {"name": "Forbidden", "tutor_id": tutor["id"]}).status_code == 422
+
+
+def test_deactivation_with_pet_is_atomic_and_audited(setup):
+    tutor, pet, procedure, appointment = seed(setup)
+    before = setup.get("/v1/records").json()
+    rejected = put(setup, "tutor", {**tutor["data"], "active": False}, tutor["id"], 1)
+    assert rejected.status_code == 409
+    assert "Transfer" in rejected.json()["detail"]
+    assert setup.get("/v1/records").json() == before
+    audit = setup.get("/v1/audit").json()
+    rejected_events = [a for a in audit if a["action"] == "tutor_deactivation_rejected"]
+    assert len(rejected_events) == 1
+    assert rejected_events[0]["record_id"] == tutor["id"]
+
+
+def test_transfer_responsibility_before_deactivation(setup):
+    tutor, pet, *_ = seed(setup)
+    replacement = put(setup, "tutor", {"name": "New active guardian"}).json()
+    assert put(setup, "pet", {**pet["data"], "tutor_id": replacement["id"]}, pet["id"], 1).status_code == 200
+    assert put(setup, "tutor", {**tutor["data"], "active": False}, tutor["id"], 1).status_code == 200
+
+
+def test_deactivation_cannot_access_other_clinic(setup):
+    other_tutor_id = str(uuid4())
+    with db.transaction() as session:
+        session.add(Record(id=other_tutor_id, clinic_id=OTHER, kind="tutor", version=1,
+                           data={"name": "Other clinic", "active": True}))
+    result = put(setup, "tutor", {"name": "Other clinic", "active": False}, other_tutor_id, 1)
+    assert result.status_code == 404
+    with db.transaction() as session:
+        other = session.get(Record, other_tutor_id)
+        assert other.data["active"] is True and other.version == 1
+
+
+@pytest.mark.parametrize("action,attendance,status", [
+    ("confirm", "confirmed", "AGENDADO"),
+    ("cancel", "cancelled", "CANCELADO"),
+    ("reschedule", "reschedule_requested", "AGENDADO"),
+])
+def test_complete_mock_workflow(setup, action, attendance, status):
+    tutor, pet, procedure, appointment = seed(setup)
+    assert settings().provider == "mock"
+    tick(instant=INSTANT)
+    reminder = snapshot()[0]
+    assert reminder.provider_id.startswith("mock:")
+    assert reminder.state == "simulated"
+    assert reminder.due_on == TODAY + timedelta(days=7)
+    assert webhook(setup, reply(reminder, action)).status_code == 200
+    assert webhook(setup, reply(reminder, action)).status_code == 200
+    tick(instant=INSTANT)
+    history = setup.get("/v1/communications").json()
+    assert len(history["reminders"]) == 1
+    assert sum(m["direction"] == "outbound" for m in history["messages"]) == 1
+    assert sum(m["direction"] == "inbound" for m in history["messages"]) == 1
+    remote = next(r for r in setup.get("/v1/records").json() if r["id"] == appointment["id"])
+    assert remote["data"]["attendance"] == attendance
+    assert remote["data"]["status"] == status
+    if action == "reschedule":
+        assert remote["data"]["date"] == appointment["data"]["date"]
+        assert history["tickets"][0]["reason"] == "reschedule_requested"

@@ -9,7 +9,7 @@ from .config import settings
 from .db import transaction
 from .models import Clinic, Record, Reminder, Communication, now
 from .provider import DeliveryError, configured_provider
-from .service import audit, due_on, eligible, ticket
+from .service import audit, due_on, eligible, prepare_delivery, ticket
 
 
 def scan(session, clinic, instant):
@@ -36,7 +36,8 @@ def scan(session, clinic, instant):
                 reminder.state = "missed"
             session.add(reminder)
             session.flush()
-            audit(session, clinic.id, "worker", "reminder_scheduled", reminder.id)
+            kind = prepare_delivery(session, reminder)
+            audit(session, clinic.id, "worker", "reminder_scheduled", reminder.id, kind=kind)
             if due < today:
                 ticket(session, clinic.id, reminder.id, "processing_window_missed")
 
@@ -72,6 +73,7 @@ def tick(config=None, provider=None, instant=None):
                 reminder.state = "suppressed"
                 audit(session, clinic.id, "worker", "reminder_suppressed", reminder.id)
                 continue
+            prepare_delivery(session, reminder)
             reminder.state, reminder.claimed_at = "sending", instant
             reminder.attempts += 1
             reminder_id = reminder.id
@@ -86,6 +88,7 @@ def tick(config=None, provider=None, instant=None):
             if not valid or not clinic.enabled:
                 reminder.state = "suppressed"
                 continue
+            prepare_delivery(session, reminder)
             try:
                 provider_id = provider.send(clinic, reminder, tutor, pet, procedure)
                 reminder.provider_id = provider_id
@@ -115,7 +118,8 @@ def tick(config=None, provider=None, instant=None):
                 session.add(Communication(clinic_id=row.clinic_id, reminder_id=row.id,
                                            provider_id=provider_id, direction="outbound",
                                            text=json.dumps({
-                                               "template": config.template_name,
+                                               "kind": "appointment_confirmation" if row.appointment_id else "clinical_due",
+                                               "template": config.template_name if row.appointment_id else config.due_template_name,
                                                "language": config.template_language,
                                                "parameters": [tutor.data["name"], pet.data["name"],
                                                               procedure.data["description"],
