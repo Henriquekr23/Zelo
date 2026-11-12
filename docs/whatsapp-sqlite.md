@@ -87,7 +87,8 @@ O schema do servidor tem inicialização própria v1. Para mudanças futuras, in
 | META_APP_SECRET | Segredo do app para HMAC dos POSTs |
 | META_VERIFY_TOKEN | Segredo independente para handshake GET |
 | GRAPH_VERSION | Versão configurável, exemplo v25.0; confirmar suporte antes de ativar |
-| TEMPLATE_NAME / TEMPLATE_LANGUAGE | Template aprovado e idioma exatos |
+| TEMPLATE_NAME / TEMPLATE_LANGUAGE | Template de confirmação aprovado e idioma exatos |
+| DUE_TEMPLATE_NAME | Template aprovado de vencimento clínico, com quatro parâmetros e sem botões de comparecimento; vazio bloqueia esse tipo de envio real |
 | MAX_ATTEMPTS / RETRY_SECONDS | Limite e atraso inicial do backoff |
 | POLL_SECONDS | Intervalo da rotina; padrão 60 segundos |
 | SENDING_TIMEOUT_SECONDS | Tempo para encaminhar tentativa interrompida à recepção |
@@ -118,6 +119,14 @@ Para revogar uma credencial, remova seu hash da configuração e reinicie o serv
 O piloto provisiona uma clínica/número Meta por instância. Os testes exercitam isolamento entre clínicas, mas onboarding multiempresa, gestão de usuários, sessões expirantes e autenticação de tutores ainda não existem.
 A área Android é explicitamente de **atendente autorizado**, não um substituto do login ausente do app.
 Restrinja o dispositivo usado no piloto e o acesso ao banco do servidor. Não exponha a API diretamente à internet sem TLS e proteção operacional.
+
+## RN-003: desativação e transferência de responsabilidade
+
+O modelo do piloto mantém um tutor por pet. Uma solicitação para desativar um tutor com pets vinculados na mesma clínica retorna HTTP 409, sem modificar dados, versões ou consentimentos anteriores.
+Primeiro vincule cada pet a outro tutor ativo da mesma clínica, por atualização versionada; depois desative o antigo tutor.
+A recusa é registrada como tutor_deactivation_rejected em transação separada da alteração rejeitada.
+Tutor sem pets pode ser desativado; um tutor inativo não pode receber novos vínculos.
+A transferência do pet não redireciona automaticamente mensagens de procedimentos históricos: os vínculos são novamente validados antes do envio.
 
 ## Simulação local sem mensagens reais
 
@@ -191,6 +200,23 @@ Falha definitiva gera failed e pendência. Consentimento revogado gera suppresse
 Ocorrências elegíveis já vencidas são marcadas missed e encaminhadas à recepção.
 `GET /v1/metrics` informa contagens, tentativas, pendências e janelas perdidas; não substitui alertas operacionais ou uma garantia de SLA em produção.
 
+## Vencimento clínico e confirmação de atendimento
+
+O worker reavalia o agendamento tanto na programação quanto antes de despachar, sob a reserva de escrita do SQLite.
+
+| Situação | Mensagem permitida |
+|---|---|
+| Agendamento AGENDADO, mesmo pet/tutor e data do vencimento | Template de confirmação com os três botões |
+| Procedimento sem agendamento | Aviso de vencimento clínico, sem botões de comparecimento |
+| Agendamento cancelado, concluído, indisponível ou contexto alterado | Aviso de vencimento clínico, sem confirmar esse atendimento |
+
+A associação é retirada somente do lembrete quando não corresponde mais a um atendimento ativo válido. O procedimento imutável conserva sua referência original, regra e vencimento.
+A decisão fica em confirmation_removed, com motivo e ID do agendamento original; o histórico de saída distingue kind=clinical_due de appointment_confirmation.
+Cancelar um atendimento não apaga o procedimento nem comprova a administração de uma nova dose. Uma nova ocorrência clínica deve ser registrada explicitamente.
+A unicidade do lembrete por ocorrência continua valendo, inclusive quando um cancelamento acontece antes de uma retentativa. Não se envia uma segunda mensagem se a ocorrência já foi processada.
+Respostas tardias a mensagens anteriormente enviadas não reabrem um agendamento fechado; são preservadas e encaminhadas à recepção.
+Respostas a um aviso exclusivamente clínico também vão para atendimento humano, sem interpretar seus textos ou payloads como confirmação de um horário.
+
 ## Meta e webhooks reais
 
 1. Criar/configurar app empresarial Meta e conta WhatsApp Business; verificar o número.
@@ -198,12 +224,13 @@ Ocorrências elegíveis já vencidas são marcadas missed e encaminhadas à rece
 3. Definir uma versão Graph suportada em GRAPH_VERSION; esta implementação não faz upgrade automático.
 4. Aprovar template de utilidade no idioma configurado, com quatro parâmetros posicionais:
    tutor, pet, procedimento, vencimento (dd/MM/yyyy).
-5. Criar os três botões quick_reply nesta ordem: Confirmar, Remarcar, Cancelar.
+5. Configurar TEMPLATE_NAME com os três botões quick_reply nesta ordem: Confirmar, Remarcar, Cancelar.
    Payloads são gerados pelo servidor como `zelo:UUID_DO_LEMBRETE:confirm|reschedule|cancel`.
-6. Disponibilizar `/webhooks/whatsapp` por **HTTPS publicamente acessível**, com certificado válido; assinar o campo messages na conta.
-7. Configurar o GET de verificação com META_VERIFY_TOKEN. Todo POST exige X-Hub-Signature-256, calculado sobre o corpo bruto com META_APP_SECRET.
-8. Configurar PROVIDER=meta e habilitar a clínica via PUT /v1/clinic após revisar consentimentos.
-9. Realizar um teste autenticado com destinatário autorizado e acompanhar sent/delivered/read.
+6. Aprovar também DUE_TEMPLATE_NAME com os mesmos quatro parâmetros e **sem botões de comparecimento**. Se não estiver configurado, o envio clínico falha de forma segura com due_template_not_configured e cria pendência; não há fallback para o template de confirmação.
+7. Disponibilizar `/webhooks/whatsapp` por **HTTPS publicamente acessível**, com certificado válido; assinar o campo messages na conta.
+8. Configurar o GET de verificação com META_VERIFY_TOKEN. Todo POST exige X-Hub-Signature-256, calculado sobre o corpo bruto com META_APP_SECRET.
+9. Configurar PROVIDER=meta e habilitar a clínica via PUT /v1/clinic após revisar consentimentos.
+10. Realizar um teste autenticado com destinatário autorizado e acompanhar sent/delivered/read.
 
 Exemplo de corpo para solicitar aprovação do template: “Olá, {{1}}! O cuidado {{3}} de {{2}} está previsto para {{4}}. Para organizar o atendimento, escolha Confirmar, Remarcar ou Cancelar. Equipe da clínica.” Os botões precisam existir na aprovação; não basta incluí-los no texto.
 
@@ -238,7 +265,9 @@ Não há console visual de atendimento nem envio manual de mensagens pelo servi�
 
 ## Android, offline e conflitos
 
-Perfil → Configurar lembretes pelo WhatsApp, ou ação Lembretes na tela inicial.
+Início → Ver lembretes abre a LembretesScreen original, identificada como demonstrativa, com retorno ao início e a navegação principal preservada.
+Perfil → Configurar lembretes pelo WhatsApp abre a WhatsAppActivity específica da integração; voltar retorna ao perfil.
+Os dados demonstrativos não são apresentados como mensagens reais do WhatsApp.
 Informe URL HTTPS e credencial pessoal de atendente; HTTP e redirecionamentos são recusados.
 Mesmo para desenvolvimento Android, configure TLS local confiável ou um servidor HTTPS seu; não há exceção cleartext ou bypass de certificado.
 
@@ -289,9 +318,12 @@ Esta implementação não declara certificação de conformidade LGPD.
 ./gradlew.bat app:connectedDebugAndroidTest
 ```
 
-Backend: 30 testes passaram na validação completa, incluindo duas rotinas concorrentes em arquivo SQLite temporário.
+Backend: 48 testes passaram na validação completa após as correções de revisão, incluindo duas rotinas concorrentes em arquivo SQLite temporário.
 FastAPI foi inicializado localmente e /health verificado; endpoints pessoais rejeitam acesso sem autenticação.
-Android: assembleDebug passou. Resultados finais e eventuais impedimentos estão em [validation.md](validation.md).
+Android: assembleDebug, assembleDebugAndroidTest e testDebugUnitTest passaram; a suíte unitária executou 12 testes.
+HistoricoViewModelTest agora exercita o ViewModel e os repositórios reais com DAOs simulados e fluxos controlados; o código de produção não foi alterado para satisfazer testes.
+MockK 1.14.6 e kotlinx-coroutines-test 1.10.2 foram adicionados somente em testImplementation, necessários para substituir a criação interna do banco e controlar Dispatchers.Main sem Android nem acesso a dados existentes. Não entram no APK.
+O novo LembretesNavigationTest verifica o percurso início → lembretes demonstrativos → perfil → configuração → retorno. Foi compilado, mas a execução depende de dispositivo online. Resultados finais em [validation.md](validation.md).
 Há testes instrumentados do journal (persistência, fingerprint e falha segura em corrupção), separados do banco do app.
 Testes automatizados não usam credenciais reais nem enviam mensagens.
 A suíte Python apresenta um aviso de depreciação do TestClient/HTTPX nas versões instaladas; os testes passam.
@@ -304,6 +336,6 @@ A suíte Python apresenta um aviso de depreciação do TestClient/HTTPX nas vers
 | RF-009 | Botões correlacionados, attendance separado, cancelamento, solicitação de remarcação | Remarcação manual pela recepção; sync Android manual |
 | RF-010 | Mensagem original, tickets, consulta e resolução autenticadas, auditoria | Console visual e resposta humana pelo sistema |
 | RN-002 | Hashes pessoais, papéis, clínica derivada da credencial, consultas isoladas | Login completo do app e gestão de usuários não implementados |
-| RN-003 | Vínculos validados por clínica; tutor ativo antes de enviar | Piloto Android com tutor local 1 |
+| RN-003 | Vínculos por clínica; tutor ativo; desativação bloqueada enquanto possuir pets; recusa auditada | Um tutor por pet; transferir responsabilidade antes de desativar; piloto Android com tutor local 1 |
 | RN-004 | Recorrência no servidor, origem concluída, intervalo válido, sem geração por agenda avulsa | Cadastro de recorrência via API |
 | RNF-003 | Tarefas persistentes, backoff, locks SQLite, deduplicação, métricas e tickets de janela perdida | Monitoramento/SLA de produção e resultado externo não garantidos |

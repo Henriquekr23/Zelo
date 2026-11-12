@@ -1,34 +1,46 @@
-# Validação da integração WhatsApp/SQLite
+# Validação do PR #28 — correções de revisão
 
-Branch: feat/whatsapp-sqlite-integration.
+Branch: feat/whatsapp-sqlite-integration. Mesmo PR, sem merge automático.
+
+## Execuções após as correções
 
 | Verificação | Resultado |
 |---|---|
-| Fase 1: testes selecionados de recorrência, validação, persistência e autorização | 9 passaram |
-| Backend completo, após reforços de concorrência, replay, consentimento e respostas | 30 passaram |
-| SQLite concorrente em arquivo temporário com dois workers | Passou; uma única solicitação de envio |
-| Fixture mock + scheduler --once em data/pilot-smoke.db separado | Executaram com sucesso, sem acesso à Meta |
-| Banco de servidor persistente: python -m zelo.bootstrap | Executou com sucesso; envios desativados |
-| FastAPI/Uvicorn em 127.0.0.1:8765 | Inicializou; /health retornou status ok / provider disabled |
-| GET /v1/records sem credencial | HTTP 401 |
-| Android app:assembleDebug | Sucesso |
-| Android app:assembleDebugAndroidTest | Sucesso |
-| Android app:testDebugUnitTest | Bloqueado por erros preexistentes em HistoricoViewModelTest.kt |
-| Testes instrumentados de SyncJournal | Criados e compilados; não executados por ausência de dispositivo/emulador |
-| Envio real Meta | Não executado; sem credenciais e template aprovado |
-| Sincronização Android/backend em dispositivo real | Pendente; requer dispositivo e endpoint HTTPS confiável |
+| Backend: .venv/Scripts/python.exe -m pytest -q | **48 passaram**, um aviso de depreciação TestClient/HTTPX |
+| Android: app:testDebugUnitTest | **12 passaram**, zero ignorados e zero falhas |
+| Android: app:assembleDebug | **Sucesso** |
+| Android: app:assembleDebugAndroidTest | **Sucesso**, incluindo SyncJournalTest e LembretesNavigationTest |
+| adb devices -l | emulator-5554 listado como **offline** |
+| Android: app:connectedDebugAndroidTest | Não executado: sem dispositivo online |
+| Envio real Meta | Não executado; nenhuma credencial real utilizada |
 
-A compilação unitária existente falha porque HistoricoViewModelTest ainda instancia HistoricoViewModel sem Application, acessa petAtivo como não nulo e espera tipo em Agendamento.
-Esse arquivo e o ViewModel correspondente não foram alterados por esta implementação.
-Não foram desabilitados testes para ocultar esse erro.
+Os três comandos Android foram executados por Gradle no Android Studio, após sync das dependências de teste.
 
-Os testes do backend usam SQLite em memória isolado; o teste de concorrência usa um arquivo no diretório temporário do pytest. Não acessam Room nem os arquivos persistentes de servidor do piloto.
-Todas as chamadas Meta nos testes usam fake ou mock de HTTP, sem mensagem real ou cobrança.
+## Correções e novos cenários
 
-Existe um aviso de depreciação TestClient/HTTPX nas versões atuais de Starlette; não houve falha de teste associada.
-requirements.lock registra as versões instaladas na validação.
+O backend conserva os testes anteriores e acrescenta 18 casos parametrizados:
+agendamento ativo/cancelado/concluído e procedimento sem agendamento; vencimento e procedimento preservados após cancelamento; uma mensagem por ocorrência; template clínico sem botões; ausência de template bloqueando envio; cancelamento durante a revalidação; três intenções tardias sobre atendimento cancelado; resposta a aviso exclusivamente clínico; desativação sem pets; recusa atômica com pets e auditoria; transferência prévia; isolamento entre clínicas; três fluxos completos com PROVIDER=mock.
 
-Room permanece versão 3. Não há mudanças nas entidades, DAOs, banco ou migrações Android.
-A alteração local preexistente .idea/deploymentTargetSelector.xml foi preservada e excluída dos commits da entrega.
+A expectativa antiga de desativar tutor com pet foi corrigida para respeitar RN-003. O teste de tutor inativo continua verificando a recusa de novos vínculos.
+Os testes anteriores de recorrência inválida, falhas transitórias, backoff, revogação, desconhecidos, assinatura, concorrência e idempotência continuam passando.
 
-O servidor temporário de validação HTTP foi encerrado após o teste.
+O teste completo simulado cadastra tutor autorizado e pet, atendimento concluído e procedimento recorrente, calcula a próxima data, executa o worker com MockProvider real, registra a saída simulated, recebe webhook assinado fictício e verifica attendance/status.
+Confirmação mantém AGENDADO; cancelamento mantém o registro e muda para CANCELADO; remarcação cria pendência sem mudar data.
+Repetição do webhook e do ciclo não duplica operações.
+
+HistoricoViewModelTest foi atualizado sem alterar o ViewModel, Room, repositórios ou modelos de produção. Preserva os quatro objetivos originais (pet, conteúdo clínico, vínculos e ordem) e acrescenta seleção, novas emissões/horário/ano e estado vazio.
+Somente DAOs e criação do banco são simulados; corrotinas são executadas por dispatcher de teste.
+Foram necessárias duas dependências exclusivas de testes: MockK e kotlinx-coroutines-test.
+
+A navegação original foi restaurada e recebeu aviso demonstrativo. Configuração WhatsApp permanece no perfil. O teste instrumentado desse percurso foi compilado; a navegação em execução ainda precisa ser verificada com dispositivo online.
+
+## Preservação e limites
+
+Room continua versão 3: entidades, DAOs, migrações, banco e estrutura local não foram alterados.
+O arquivo pessoal .idea/deploymentTargetSelector.xml permanece fora dos commits.
+Não houve envios reais, exclusão de registros ou acesso ao Room pelos testes do backend.
+Bases SQLite Python são isoladas em memória; concorrência usa arquivo temporário do pytest.
+
+Envio real requer aprovação dos dois templates (confirmação e vencimento sem botões), credenciais no servidor e webhook HTTPS.
+Sincronização manual, cadastro de recorrência por API e atendimento humano por endpoints autenticados continuam com as limitações descritas em whatsapp-sqlite.md.
+A inicialização HTTP/persistência/fixture local foi validada na entrega inicial; essa verificação histórica não substitui os resultados atuais acima.
