@@ -19,6 +19,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,7 +37,8 @@ import com.example.zelo.viewmodel.LembretesUiState
 
 @Composable
 fun LembretesScreen(
-    uiState: LembretesUiState
+    uiState: LembretesUiState,
+    onVoltar: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -51,6 +53,13 @@ fun LembretesScreen(
         Column(
             modifier = Modifier.padding(20.dp)
         ) {
+            TextButton(onClick = onVoltar) { Text("Voltar ao início") }
+            Text(
+                text = "Dados demonstrativos — não representam mensagens enviadas pelo WhatsApp.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(ZeloTheme.spacing.md))
             Text(
                 text = "Próximos vencimentos",
                 style = MaterialTheme.typography.titleLarge,
