@@ -1,48 +1,73 @@
 ## Objetivo
 
-Permitir apresentar o fluxo de lembretes inteiramente pela interface Android, sem internet, FastAPI, credenciais ou WhatsApp real.
+A apresentação acadêmica exibia campos de servidor, credenciais e sincronização antes da demonstração. Agora o perfil abre uma introdução simples e a experiência offline, com conversa interativa e uma clínica fictícia com mapa.
 
-Este PR parte da branch feat/whatsapp-sqlite-integration corrigida no PR #28. Sua base é essa branch, não main, para conter somente a demonstração e preservar a integração anterior.
+Este PR mantém a base **feat/whatsapp-sqlite-integration** (PR #28), contendo somente a demonstração e seu refinamento. Nenhum merge automático.
 
-## Novas telas e utilização
+## Telas e utilização
 
-Perfil → Configurar lembretes pelo WhatsApp → Experimentar demonstração.
+- **Perfil → Lembretes pelo WhatsApp → Experimentar demonstração**: linha clicável com chevron, sem interruptor; introdução sem formulários técnicos.
+- **WhatsAppDemoActivity**: cabeçalho de simulação, procedimento compacto com Detalhes, resumo do estado, quatro abas fixas e legíveis, conversa com paleta verde própria, balões de clínica/tutor e respostas integradas ao lembrete.
+- **Perfil → Minha clínica**: Clínica Jardim Veterinária fictícia, endereço/serviços/horários ilustrativos e mapa nativo Canvas.
+- **Simular trajeto / Ocultar trajeto**: origem, caminho, distância e duração fictícios, inteiramente dentro do aplicativo.
 
-WhatsAppDemoActivity exibe indicador permanente de simulação, procedimento fictício, conversa em balões, agenda atualizada, recepção com pendências e histórico cronológico.
-Selecionar cenário, Próximo passo e Reiniciar demonstração tornam a apresentação reproduzível. Detalhes expande as informações do procedimento sem sobrecarregar a primeira tela.
+O formulário técnico do piloto foi preservado em WhatsAppPilotScreen.kt, sem acesso no fluxo acadêmico. O ViewModel e os serviços reais continuam no projeto.
 
-## Cenários e regras
+## Cenários e regras preservados
 
-Atendimento normal, falta de consentimento, ausência de recorrência, agendamento cancelado, falha transitória/persistente, revogação por PARAR e tutor inativo.
+Atendimento normal, falta de consentimento, ausência de recorrência, agendamento cancelado, falhas transitórias/persistentes, revogação por PARAR e tutor inativo.
 
-RF-008: cálculo e elegibilidade antes de gerar uma mensagem.
-RF-009: confirmação mantém AGENDADO; cancelamento mantém registro; remarcação cria pendência sem trocar data.
-RF-010: mensagem original preservada, atendimento humano e observação de resolução.
-RN-003/RN-004: tutor ativo e regra válida obrigatórios.
-Cancelamento do atendimento preserva vencimento clínico, com aviso sem botões de comparecimento, como no backend corrigido.
+- RF-008: elegibilidade, vencimento e envio simulado.
+- RF-009: confirmação mantém AGENDADO; cancelamento preserva registros; remarcação cria pendência sem trocar a data.
+- RF-010: texto original, atendimento humano, observação e resolução.
+- RN-003/RN-004: tutor ativo e recorrência válida obrigatórios.
+- RNF-003: retentativas, histórico e idempotência demonstrados, sem afirmar SLA real.
+
+As regras de DemoEngine.kt não foram alteradas neste refinamento. A escolha de uma resposta desabilita as ações de comparecimento contraditórias.
 
 ## Arquitetura e isolamento
 
-Fixtures/modelos e máquina de estados Kotlin puros, comandos explícitos e ViewModel próprio. Relógio lógico, IDs de mensagens e sequências de entrada controlados; ações repetidas são idempotentes.
-Estado em memória; nenhuma dependência de Context, Room, repositórios reais ou HTTP no motor e no ViewModel.
-A Activity recebe apenas o tema via Intent. Sem gravação de dados, preferências, journal, tokens ou backend.
-Nenhuma dependência nova. Room v3 e o backend não foram alterados.
+Estado em memória e ViewModels próprios. Fixtures, máquina de estados e relógio lógico isolados dos repositórios reais.
+A clínica usa pontos normalizados de um desenho, sem coordenadas geográficas, GPS, permissões de localização ou APIs de mapas.
 
-## Testes executados
+Room v3, entidades, DAOs, migrações, backend FastAPI/SQLite e serviços Meta permanecem intactos.
+A demonstração não grava cadastros, preferências, journal ou comunicações reais. Nenhuma credencial ou mensagem real utilizada.
+Nenhuma dependência adicionada.
 
-- app:assembleDebug: sucesso.
-- app:testDebugUnitTest: **38 passaram**, zero ignorados/falhas (26 novos + 12 existentes).
-- app:assembleDebugAndroidTest: sucesso.
-- Três instrumentados adicionados para navegação, respostas, agenda, recepção, reinício e cenários.
-- Instrumentados não executados: emulator-5554 offline.
-- Renderização de preview pelo MCP indisponível (Missing ComposeViewAdapter); não declarada como teste visual aprovado.
-- Nenhuma mensagem real enviada.
+## Validação
 
-## Apresentação e limitações
+| Verificação | Resultado |
+|---|---|
+| app:assembleDebug | Sucesso |
+| app:testDebugUnitTest | 41 aprovados; zero falhas/ignorados |
+| app:assembleDebugAndroidTest | Sucesso |
+| app:connectedDebugAndroidTest — 360 dp, claro | 11 aprovados |
+| app:connectedDebugAndroidTest — 400 dp, escuro, modo avião/Wi-Fi desativado | 11 aprovados |
 
-docs/whatsapp-demo.md contém o roteiro de cinco minutos e instruções completas.
-O estado sobrevive à rotação, mas é descartado ao fechar a Activity. As datas são relativas ao dia de abertura; o relógio das ações é controlado.
-O modo simula resultados, não executa Python, API Meta ou webhooks reais, nem comprova entrega de mensagens ou disponibilidade de produção.
-Execução visual/instrumentada ainda deve ser conferida em dispositivo online.
+Emulador: Medium_Phone_2, Android 16/API 36. Inspeção visual realizada no perfil, introdução, mapa/trajeto, conversa, respostas e agenda.
+Novos testes cobrem clínica, navegação de retorno, ausência de campos técnicos, reinício de sessão e rolagem automática sem intervenção.
+Os testes existentes continuam ativos; foram corrigidos o contexto do diretório temporário do journal e a busca/sincronização de nós virtuais Compose.
 
-Sem merge automático. A base poderá ser atualizada para main após a incorporação do PR #28.
+O emulador inicialmente congelou a renderização e perdeu o foco da janela. Um reinício sem snapshot com renderização por software permitiu executar a validação, sem alterações de produção para contornar o ambiente.
+
+## Documentação e limites
+
+- docs/whatsapp-demo.md: acesso atualizado, cenários e roteiro de cinco minutos incluindo a clínica.
+- docs/clinic-demo.md: fixtures, mapa, trajeto, isolamento e limitações.
+
+Não há geolocalização, rota real, agenda de clínica real ou envio pelo WhatsApp. O modo não substitui os testes autenticados da Meta nem o backend de produção.
+Estado descartado ao fechar a sessão; o ViewModel conserva a sessão durante recriação. Datas relativas ao dia de abertura.
+Não validado em aparelho físico. A integração real continua dependente da infraestrutura documentada no PR #28.
+
+## Checklist
+
+- [x] Perfil sem interruptor enganoso e com acesso à clínica.
+- [x] Introdução acadêmica sem configuração técnica.
+- [x] Clínica e mapa/trajeto fictícios funcionando offline.
+- [x] Conversa, botões, agenda, recepção e histórico preservados.
+- [x] Sete cenários e regras existentes preservados.
+- [x] Compilação, testes unitários e instrumentados executados.
+- [x] Temas claro/escuro e larguras 360/400 dp conferidos.
+- [x] Room/backend/Meta preservados; nenhum envio real.
+- [x] Arquivos pessoais do Android Studio fora dos commits.
+- [x] PR #28 preservado; sem merge automático.

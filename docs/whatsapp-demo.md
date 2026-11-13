@@ -5,20 +5,23 @@
 Demonstração educativa interativa para apresentação acadêmica, executada inteiramente no Android.
 Não requer internet, backend, número real, credenciais ou conta Meta.
 
-Abra **Perfil → Configurar lembretes pelo WhatsApp → Experimentar demonstração**.
-O card funciona mesmo sem preencher qualquer campo de configuração.
+Abra **Perfil → Lembretes pelo WhatsApp → Experimentar demonstração**.
+A página introdutória contém somente a explicação e o card de demonstração; não pede configuração.
 A tela exclusiva mostra **MODO DEMONSTRAÇÃO** e **Simulação educativa. Nenhuma mensagem real será enviada.**
-Voltar retorna à configuração; as telas reais e a tela original de lembretes permanecem disponíveis.
+Voltar retorna à introdução e depois ao perfil. A tela original de lembretes continua acessível.
+O formulário técnico do piloto foi preservado em `WhatsAppPilotScreen.kt`, sem rota na apresentação acadêmica. Os serviços e o ViewModel da integração real permanecem no projeto.
 
 ## Utilização na interface
 
 A tela tem o seletor de cenário, o card do procedimento fictício, acompanhamento imediato da agenda e quatro abas:
 
-- **Conversa:** clínica fictícia, balões do tutor e da clínica, horários simulados e respostas interativas.
+- **Conversa:** Clínica Jardim Veterinária, cabeçalho verde, fundo próprio e balões à esquerda (clínica) e à direita (tutor). Horários e indicadores sempre identificados como simulação; respostas ficam dentro do balão de lembrete.
 - **Agenda:** estado clínico, confirmação do tutor, data prevista e última interação.
 - **Recepção:** pendências abertas, mensagem original e resolução com observação fictícia.
 - **Histórico:** ações efetivamente executadas, em ordem e com horário lógico.
 
+As quatro abas têm a mesma largura e permanecem acessíveis durante a rolagem. Novas mensagens deslocam a conversa até a última interação. Os controles inferiores respeitam a barra de navegação.
+A paleta familiar de mensagens é aplicada somente à conversa; cards e navegação seguem o tema do Zelo.
 Use **Detalhes** para mostrar tutor, atendimento anterior, intervalo, vencimento, antecedência e consentimento.
 **Próximo passo** conduz o fluxo normal: geração → envio simulado → confirmação → agenda.
 Nos cenários de falha, avança o relógio até a próxima tentativa; quando há pendência, abre a recepção.
@@ -46,14 +49,15 @@ Na recepção, **Resolver pendência** abre o campo de observação e **Registra
 
 | Tempo | Apresentação observando apenas o aplicativo |
 |---|---|
-| 0:00–0:40 | Entre pelo perfil, toque Experimentar demonstração e aponte a indicação de simulação. Abra Detalhes e mostre Carlos, Thor, a última dose, 30 dias de recorrência e vencimento em sete dias da referência. |
-| 0:40–1:20 | Atendimento normal: Simular envio automático. Mostre o balão e confirme. Abra Agenda ou use Próximo passo: AGENDADO permanece e o comparecimento fica Confirmado. |
-| 1:20–2:00 | Reinicie, gere o lembrete e escolha Remarcar. Use Próximo passo para abrir a recepção. Mostre a pendência, resolva com observação e destaque que a data não mudou. |
-| 2:00–2:35 | Reinicie, envie e escolha Cancelar. Abra Agenda e mostre CANCELADO. Selecione Agendamento cancelado e envie: o aviso clínico continua, sem confirmar consulta cancelada. |
-| 2:35–3:15 | Volte ao cenário normal, envie e selecione Enviar outra mensagem. Use o exemplo, envie e abra a recepção: mensagem original e necessidade de intervenção humana ficam visíveis. |
-| 3:15–4:10 | Escolha Falha no envio. Execute a primeira tentativa e destaque o horário programado. Avance com Nova tentativa com sucesso. Se desejar, reinicie e repita Simular nova falha para mostrar falha persistente. |
-| 4:10–4:45 | Mostre Tutor sem consentimento ou Procedimento sem recorrência bloqueando o envio. No cenário Revogação por PARAR, avance duas vezes e verifique que um novo envio está bloqueado. |
-| 4:45–5:00 | Abra Histórico, mostrando operações reais da simulação em ordem. Reinicie para comprovar que a sessão pode ser repetida e que os dados são exclusivamente fictícios. |
+| 0:00–0:45 | Perfil → Minha clínica. Mostre a Clínica Jardim Veterinária e o aviso de localização fictícia. Toque Simular trajeto: origem, caminho, distância e duração são ilustrativos. Volte ao perfil. |
+| 0:45–1:15 | Lembretes pelo WhatsApp → Experimentar demonstração. Aponte o aviso de simulação, selecione Atendimento normal e abra Detalhes para explicar o vencimento relativo ao dia da sessão. |
+| 1:15–1:55 | Próximo passo gera o lembrete. Mostre a conversa da clínica, escolha Confirmar dentro do balão e abra Agenda: AGENDADO permanece, com comparecimento Confirmado. |
+| 1:55–2:35 | Reinicie, envie e escolha Remarcar. Abra Recepção, mostre a pendência e registre uma observação. Destaque que a data não mudou automaticamente. |
+| 2:35–3:00 | Reinicie, envie e escolha Cancelar. Mostre CANCELADO na Agenda. O procedimento e o histórico são preservados. |
+| 3:00–3:35 | No cenário normal, envie e toque Enviar outra mensagem. Envie o exemplo e abra Recepção: a mensagem original permanece disponível para atendimento humano. |
+| 3:35–4:10 | Selecione Falha no envio. Execute a tentativa e avance para Nova tentativa com sucesso. O relógio da demonstração avança sem esperar tempo real. |
+| 4:10–4:45 | Mostre o bloqueio em Tutor sem consentimento e o aviso sem botões em Agendamento cancelado. Se desejar, use Revogação por PARAR e Verificar novo envio. |
+| 4:45–5:00 | Abra Histórico e destaque que cada evento veio de uma ação. Reinicie e retorne ao perfil, pronto para repetir a apresentação. |
 
 ## Arquitetura e isolamento
 
@@ -66,7 +70,8 @@ Na recepção, **Resolver pendência** abre o campo de observação e **Registra
 O motor e o ViewModel não recebem Context, Application, DAOs, repositórios, tokens ou clientes HTTP.
 A Activity recebe somente o identificador do tema visual via Intent, sem ler nem gravar preferências.
 O modo não abre Room, SQLite do servidor, journal da sincronização ou serviços de mensagens.
-A tela anterior de configuração pode ler seu estado local normalmente, mas o botão da demonstração não salva nem sincroniza dados.
+A introdução não instancia o ViewModel da integração real e não carrega o journal da sincronização. Apenas o tema visual atual é consultado; nenhuma preferência é alterada.
+A clínica tem dados e ViewModel independentes, documentados em [clinic-demo.md](clinic-demo.md).
 Nenhuma dependência nova foi adicionada.
 
 A sessão sobrevive à rotação pelo ViewModel, mas não é persistida. Fechar a Activity descarta o estado; reabrir inicia outra demonstração.
@@ -104,15 +109,27 @@ Mensagens de confirmação visual da clínica também pertencem somente à simul
 ./gradlew.bat app:connectedDebugAndroidTest
 ```
 
-Os três primeiros comandos passaram na validação. Foram executados **38 testes unitários**, sem testes ignorados ou falhas: 26 novos e 12 existentes.
-Os novos testes cobrem elegibilidade, limites de recorrência e janela, confirmação, cancelamento, remarcação, mensagem original, resolução, PARAR, retentativa, falha persistente, replays, ordem temporal, reinício, sessões independentes, passos guiados e isolamento do Room.
-O teste de isolamento faz a abertura de ZeloDatabase falhar explicitamente e verifica zero chamadas durante os cenários do ViewModel.
-`WhatsAppDemoTest` contém três testes instrumentados de entrada/retorno, conversa/agenda/recepção/reinício e cenários alternativos.
-O teste de navegação existente foi adaptado para localizar controles abaixo da dobra após o novo card, sem remover verificações.
+Os três primeiros comandos passaram. A suíte unitária tem **41 testes aprovados**, sem falhas ou ignorados (38 existentes e três da clínica).
+Os testes do motor cobrem os sete cenários, elegibilidade, confirmação, cancelamento, remarcação, atendimento humano, PARAR, retentativas, idempotência e isolamento do Room.
+A clínica acrescenta verificações dos pontos/caminho ilustrativos, sessões independentes e zero chamadas ao Room.
 
-O emulador emulator-5554 permaneceu **offline**; instrumentados foram compilados, mas **não executados**.
-A tentativa de renderização de preview pelo MCP retornou Missing ComposeViewAdapter; não é uma evidência de validação visual. O Composable de preview está disponível para um ambiente IDE com tooling apropriado.
-Assim, a interação visual em dispositivo continua pendente dessa verificação. Nenhum envio real foi realizado.
+A suíte instrumentada inclui navegação original, entrada e retorno da demonstração, conversa, agenda, recepção, reinício e clínica/trajeto.
+Na primeira execução, o teste de journal usava o contexto do APK de testes, sem acesso ao diretório; foi corrigido para uma pasta temporária exclusiva no contexto do processo alvo.
+A busca de nós virtuais Compose também foi ajustada, preservando as verificações e sem adicionar dependências.
+
+A suíte de **11 testes instrumentados passou**, sem falhas ou ignorados, no emulador Medium_Phone_2 / Android 16 (API 36):
+- largura de 360 dp, tema claro;
+- largura de 400 dp, tema escuro, modo avião e Wi-Fi confirmado como desativado.
+
+Também foi feita inspeção visual no dispositivo: perfil sem interruptor, introdução sem campos técnicos, abas inteiras, mapa/trajeto, balões, respostas, rolagem e agenda.
+O teste de rolagem exige que os botões completos fiquem visíveis sem usar a busca que rola a tela.
+O driver dos testes percorre os nós virtuais Compose, limpa o cache de acessibilidade em API 33+ e aguarda as transições antes de procurar outra página.
+
+Inicialmente, o emulador apresentou tela preta e ANR sem foco de janela. Reiniciar o AVD sem snapshot e com renderização por software permitiu a validação; não foi aplicada correção no código do aplicativo para essa ocorrência.
+Houve ajustes nos testes de journal e na sincronização das buscas da interface durante a validação; nenhum teste foi removido ou desabilitado.
+Não houve validação em aparelho físico.
+
+Nenhuma mensagem real foi enviada.
 
 ## Limitações
 

@@ -3,7 +3,6 @@ package com.example.zelo
 import android.content.Intent
 import android.os.SystemClock
 import android.view.KeyEvent
-import android.view.accessibility.AccessibilityNodeInfo
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -15,6 +14,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class WhatsAppDemoTest {
     private val instrumentation = InstrumentationRegistry.getInstrumentation()
+    private val ui = DemoUiDriver(instrumentation)
 
     @Test fun configOpensDemoWithoutCredentialsAndReturns() {
         val intent = Intent(instrumentation.targetContext, WhatsAppActivity::class.java)
@@ -95,45 +95,30 @@ class WhatsAppDemoTest {
         }
     }
 
+    @Test fun newReminderKeepsReplyOptionsVisibleWithoutManualScrolling() {
+        ActivityScenario.launch<WhatsAppDemoActivity>(demoIntent()).use {
+            click("Próximo passo")
+            // Deliberately do not use the scrolling lookup helper here.
+            repeat(40) {
+                var node = ui.findText("Cancelar")
+                while (node != null && !node.isClickable) node = node.parent
+                val bounds = android.graphics.Rect()
+                node?.getBoundsInScreen(bounds)
+                if (node?.isEnabled == true &&
+                    bounds.height() >= 40 * instrumentation.targetContext.resources.displayMetrics.density) return
+                SystemClock.sleep(150)
+            }
+            fail("The reminder must scroll its complete reply buttons above the bottom controls")
+        }
+    }
+
     private fun demoIntent() = Intent(instrumentation.targetContext, WhatsAppDemoActivity::class.java)
     private fun scenario(title: String) {
         click("Selecionar cenário")
         click(title)
     }
 
-    private fun find(text: String): AccessibilityNodeInfo? =
-        instrumentation.uiAutomation.rootInActiveWindow?.findAccessibilityNodeInfosByText(text)
-            ?.firstOrNull { it.isVisibleToUser && (it.text?.toString() == text || it.contentDescription?.toString() == text) }
+    private fun awaitText(text: String) = ui.awaitText(text)
+    private fun click(text: String) = ui.click(text)
 
-    private fun awaitText(text: String) {
-        repeat(30) { attempt ->
-            if (find(text) != null) return
-            scroll(instrumentation.uiAutomation.rootInActiveWindow,
-                if (attempt % 16 < 8) AccessibilityNodeInfo.ACTION_SCROLL_FORWARD else AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD)
-            SystemClock.sleep(150)
-        }
-        fail("Expected demo text: $text")
-    }
-
-    private fun click(text: String) {
-        repeat(30) { attempt ->
-            var node = find(text)
-            while (node != null && !node.isClickable) node = node.parent
-            if (node?.performAction(AccessibilityNodeInfo.ACTION_CLICK) == true) {
-                SystemClock.sleep(350)
-                return
-            }
-            scroll(instrumentation.uiAutomation.rootInActiveWindow,
-                if (attempt % 16 < 8) AccessibilityNodeInfo.ACTION_SCROLL_FORWARD else AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD)
-            SystemClock.sleep(150)
-        }
-        fail("No demo action: $text")
-    }
-
-    private fun scroll(node: AccessibilityNodeInfo?, action: Int): Boolean {
-        if (node == null) return false
-        if (node.isScrollable && node.performAction(action)) return true
-        for (index in 0 until node.childCount) if (scroll(node.getChild(index), action)) return true
-        return false
-    }
 }
