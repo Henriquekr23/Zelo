@@ -16,9 +16,9 @@ import java.util.UUID
 
 @RunWith(AndroidJUnit4::class)
 class SyncJournalTest {
-    private val root = File(InstrumentationRegistry.getInstrumentation().context.cacheDir,
+    private val root = File(InstrumentationRegistry.getInstrumentation().targetContext.cacheDir,
         "journal-test-" + UUID.randomUUID()).apply { mkdirs() }
-    private val context = object : ContextWrapper(InstrumentationRegistry.getInstrumentation().context) {
+    private val context = object : ContextWrapper(InstrumentationRegistry.getInstrumentation().targetContext) {
         override fun getNoBackupFilesDir(): File = root
     }
 

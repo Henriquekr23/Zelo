@@ -388,6 +388,10 @@ class MainActivity : ComponentActivity() {
                                     )
 
                                     "perfil" -> PerfilScreen(
+                                        onAbrirClinica = {
+                                            startActivity(Intent(this@MainActivity, ClinicDemoActivity::class.java)
+                                                .putExtra("DEMO_THEME", temaSelecionado.name))
+                                        },
                                         onAbrirWhatsApp = {
                                             startActivity(Intent(this@MainActivity, WhatsAppActivity::class.java))
                                         },
