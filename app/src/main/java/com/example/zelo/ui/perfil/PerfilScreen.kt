@@ -32,7 +32,8 @@ fun PerfilScreen(
     onAbrirHistorico: () -> Unit = {},
     temaSelecionado: AppColorTheme,
     onSelecionarTema: (AppColorTheme) -> Unit,
-    onAbrirWhatsApp: () -> Unit = {}
+    onAbrirWhatsApp: () -> Unit = {},
+    onAbrirClinica: () -> Unit = {}
 ) {
 
 
@@ -58,6 +59,7 @@ fun PerfilScreen(
             SecaoPreferencias(
                 onAbrirHistorico = onAbrirHistorico,
                 onAbrirWhatsApp = onAbrirWhatsApp,
+                onAbrirClinica = onAbrirClinica,
                 temaSelecionado = temaSelecionado,
                 onSelecionarTema = onSelecionarTema
             )
@@ -327,7 +329,8 @@ private fun SecaoPreferencias(
     onAbrirHistorico: () -> Unit,
     temaSelecionado: AppColorTheme,
     onSelecionarTema: (AppColorTheme) -> Unit,
-    onAbrirWhatsApp: () -> Unit = {}
+    onAbrirWhatsApp: () -> Unit = {},
+    onAbrirClinica: () -> Unit = {}
 ) {
     Text(
         text = "Preferências",
@@ -445,15 +448,13 @@ private fun SecaoPreferencias(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(text = "🔔 Configurar lembretes pelo WhatsApp", fontWeight = FontWeight.Medium)
-                Switch(
-                    checked = false,
-                    onCheckedChange = null,
-                    enabled = false,
-                    colors = SwitchDefaults.colors(
-                        checkedTrackColor = MaterialTheme.colorScheme.primary
-                    )
-                )
+                Column(Modifier.weight(1f)) {
+                    Text("Lembretes pelo WhatsApp", fontWeight = FontWeight.Medium)
+                    Text("Conheça a funcionalidade", style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                Text("›", style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.primary)
             }
 
             Divider(color = OutlineVariant, thickness = 1.dp)
@@ -477,12 +478,17 @@ private fun SecaoPreferencias(
 
 
             Row(
-                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                modifier = Modifier.fillMaxWidth().clickable(onClick = onAbrirClinica).padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(text = "🏥 Clínica: Fulano (em breve)", fontWeight = FontWeight.Medium)
-                Text(text = ">", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Column(Modifier.weight(1f)) {
+                    Text("Minha clínica", fontWeight = FontWeight.Medium)
+                    Text("Clínica Jardim • Demonstração", style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                Text("›", style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.primary)
             }
         }
     }

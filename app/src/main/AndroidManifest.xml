@@ -25,7 +25,8 @@
         </activity>
 
         <activity android:name=".WhatsAppActivity" android:exported="false" />
-        <activity android:name=".WhatsAppDemoActivity" android:exported="false" />
+        <activity android:name=".WhatsAppDemoActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
+        <activity android:name=".ClinicDemoActivity" android:exported="false" />
 
         <activity
             android:name=".NovoAgendamentoActivity"
