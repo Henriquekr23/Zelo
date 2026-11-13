@@ -136,8 +136,7 @@ class MainActivity : ComponentActivity() {
                     val historicoUiState by
                     historicoViewModel.uiState
 
-                    val lembretesUiState by
-                    lembretesViewModel.uiState
+                    val lembretesUiState by lembretesViewModel.uiState
 
                     val telaAtual by _telaAtual
 
@@ -384,10 +383,14 @@ class MainActivity : ComponentActivity() {
                                     )
 
                                     "lembretes" -> LembretesScreen(
-                                        uiState = lembretesUiState
+                                        uiState = lembretesUiState,
+                                        onVoltar = { _telaAtual.value = "inicio" }
                                     )
 
                                     "perfil" -> PerfilScreen(
+                                        onAbrirWhatsApp = {
+                                            startActivity(Intent(this@MainActivity, WhatsAppActivity::class.java))
+                                        },
                                         temaSelecionado = temaSelecionado,
                                         onSelecionarTema = { novoTema ->
 

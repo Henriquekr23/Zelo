@@ -31,7 +31,8 @@ fun PerfilScreen(
     onAbrirMeusPets: () -> Unit = {},
     onAbrirHistorico: () -> Unit = {},
     temaSelecionado: AppColorTheme,
-    onSelecionarTema: (AppColorTheme) -> Unit
+    onSelecionarTema: (AppColorTheme) -> Unit,
+    onAbrirWhatsApp: () -> Unit = {}
 ) {
 
 
@@ -56,6 +57,7 @@ fun PerfilScreen(
             Spacer(modifier = Modifier.height(24.dp))
             SecaoPreferencias(
                 onAbrirHistorico = onAbrirHistorico,
+                onAbrirWhatsApp = onAbrirWhatsApp,
                 temaSelecionado = temaSelecionado,
                 onSelecionarTema = onSelecionarTema
             )
@@ -324,7 +326,8 @@ private fun SecaoMeusPets(
 private fun SecaoPreferencias(
     onAbrirHistorico: () -> Unit,
     temaSelecionado: AppColorTheme,
-    onSelecionarTema: (AppColorTheme) -> Unit
+    onSelecionarTema: (AppColorTheme) -> Unit,
+    onAbrirWhatsApp: () -> Unit = {}
 ) {
     Text(
         text = "Preferências",
@@ -437,13 +440,12 @@ private fun SecaoPreferencias(
                 )
             }
 
-            var whatsappAtivo by remember { mutableStateOf(true) }
             Row(
-                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                modifier = Modifier.fillMaxWidth().clickable(onClick = onAbrirWhatsApp).padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(text = "🔔 Lembretes via WhatsApp (em breve)", fontWeight = FontWeight.Medium)
+                Text(text = "🔔 Configurar lembretes pelo WhatsApp", fontWeight = FontWeight.Medium)
                 Switch(
                     checked = false,
                     onCheckedChange = null,

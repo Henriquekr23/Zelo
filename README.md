@@ -10,6 +10,14 @@ O **Zelo** é um aplicativo Android voltado para a saúde, bem-estar e organiza�
 - **Histórico Clínico (`HistoricoScreen`):** Linha do tempo elegante mostrando vacinas, vermífugos e consultas já concluídas do pet selecionado.
 - **Perfil do Tutor e Preferências (`PerfilScreen`):** Área de gestão dos dados do tutor, listagem dos pets cadastrados e ativação de lembretes automáticos via WhatsApp.
 
+## Lembretes pelo WhatsApp — piloto
+
+A integração usa **FastAPI, SQLAlchemy e um SQLite exclusivo do servidor** (`backend/data/zelo.db`). O Room Android permanece na versão 3, sem alteração de entidades ou migrações. O backend executa os lembretes mesmo com o Android fechado.
+
+Consulte [instalação, configuração, testes e limitações](docs/whatsapp-sqlite.md). Há um provedor simulado explícito e um cliente da Cloud API oficial; **envio real ainda exige credenciais, template aprovado e validação autenticada com a Meta**.
+
+No Android, Perfil → Configurar lembretes pelo WhatsApp permite vincular um aparelho de atendente à clínica, registrar telefone/consentimento e sincronizar. A recorrência é cadastrada pela recepção no backend. O histórico demonstrativo de lembretes não é usado nesse fluxo.
+
 ## 🛠️ Tecnologias Utilizadas
 
 - **Linguagem:** Kotlin 

@@ -116,6 +116,10 @@ fun InicioScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            TextButton(onClick = { onNavegarParaTela("lembretes") }) {
+                Text("Ver lembretes")
+            }
+
             // Próximos cuidados
             Row(
                 modifier = Modifier.fillMaxWidth(),

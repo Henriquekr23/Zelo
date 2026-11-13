@@ -16,3 +16,17 @@ local.properties
 
 # Saídas geradas por assistentes (não fazem parte do código do projeto)
 /Claude outputs/
+
+# Backend: secrets, runtime SQLite and isolated Python environment
+backend/.venv/
+.env
+.env.*
+!.env.example
+__pycache__/
+.pytest_cache/
+*.pyc
+backend/data/
+*.db
+*.db-wal
+*.db-shm
+
