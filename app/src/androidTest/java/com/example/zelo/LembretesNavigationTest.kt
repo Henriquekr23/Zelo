@@ -31,7 +31,7 @@ class LembretesNavigationTest {
             awaitText("Lembretes pelo WhatsApp")
             awaitText("Sincronizar com a clínica")
             instrumentation.sendKeyDownUpSync(KeyEvent.KEYCODE_BACK)
-            awaitText("Preferências")
+            awaitText("🔔 Configurar lembretes pelo WhatsApp")
             click("Início")
             awaitText("Ações rápidas")
         }
@@ -41,6 +41,7 @@ class LembretesNavigationTest {
         val deadline = SystemClock.uptimeMillis() + 10000
         while (SystemClock.uptimeMillis() < deadline) {
             if (find(text) != null) return
+            scroll(instrumentation.uiAutomation.rootInActiveWindow)
             SystemClock.sleep(100)
         }
         fail("Expected navigation text: $text")
