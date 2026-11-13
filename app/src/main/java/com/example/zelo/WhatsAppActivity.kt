@@ -20,7 +20,10 @@ class WhatsAppActivity : ComponentActivity() {
         setContent {
             val selected by theme.tema.collectAsState()
             ZeloTheme(temaCor = selected) {
-                WhatsAppScreen(model, onBack = { finish() })
+                WhatsAppScreen(model, onBack = { finish() }, onOpenDemo = {
+                    startActivity(android.content.Intent(this, WhatsAppDemoActivity::class.java)
+                        .putExtra("DEMO_THEME", selected.name))
+                })
             }
         }
     }

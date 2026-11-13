@@ -13,13 +13,20 @@ import androidx.compose.ui.unit.dp
 import com.example.zelo.viewmodel.WhatsAppViewModel
 
 @Composable
-fun WhatsAppScreen(model: WhatsAppViewModel, onBack: () -> Unit) {
+fun WhatsAppScreen(model: WhatsAppViewModel, onBack: () -> Unit, onOpenDemo: () -> Unit = {}) {
     var confirmServer by remember { mutableStateOf(false) }
     Scaffold { padding ->
         Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)) {
             TextButton(onClick = onBack) { Text("Voltar") }
             Text("Lembretes pelo WhatsApp", style = MaterialTheme.typography.headlineSmall)
+            Card(Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Modo Demonstração", style = MaterialTheme.typography.titleMedium)
+                    Text("Experimente o fluxo completo sem internet, credenciais ou mensagens reais.")
+                    Button(onClick = onOpenDemo) { Text("Experimentar demonstração") }
+                }
+            }
             Text("Área do piloto para um atendente autorizado. Ao sincronizar, os pets e agendamentos deste aparelho serão vinculados ao tutor abaixo e à clínica conectada.")
             OutlinedTextField(value = model.url, onValueChange = { model.url = it },
                 label = { Text("Endereço HTTPS da clínica") }, singleLine = true, enabled = !model.busy)

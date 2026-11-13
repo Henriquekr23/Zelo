@@ -25,6 +25,7 @@
         </activity>
 
         <activity android:name=".WhatsAppActivity" android:exported="false" />
+        <activity android:name=".WhatsAppDemoActivity" android:exported="false" />
 
         <activity
             android:name=".NovoAgendamentoActivity"
