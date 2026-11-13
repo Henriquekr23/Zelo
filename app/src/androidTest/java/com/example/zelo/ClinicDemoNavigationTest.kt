@@ -19,7 +19,7 @@ class ClinicDemoNavigationTest {
     @Test fun profileOpensClinicAndSimplifiedWhatsAppAndReturns() {
         val intent = Intent(instrumentation.targetContext, MainActivity::class.java).putExtra("TELA", "perfil")
         ActivityScenario.launch<MainActivity>(intent).use {
-            click("Minha clínica")
+            click("🏥 Minha clínica")
             awaitText("CLÍNICA DEMONSTRATIVA")
             awaitText("Mapa ilustrativo — localização fictícia.")
             click("Simular trajeto")
@@ -28,7 +28,7 @@ class ClinicDemoNavigationTest {
             click("Ocultar trajeto")
             awaitText("Simular trajeto")
             instrumentation.sendKeyDownUpSync(KeyEvent.KEYCODE_BACK)
-            click("Lembretes pelo WhatsApp")
+            click("💬 Lembretes pelo WhatsApp")
             awaitText("Experimentar demonstração")
             assertFalse(hasTechnicalInput(instrumentation.uiAutomation.rootInActiveWindow))
             assertNull(ui.findText("Sincronizar com a clínica"))
@@ -37,7 +37,7 @@ class ClinicDemoNavigationTest {
             instrumentation.sendKeyDownUpSync(KeyEvent.KEYCODE_BACK)
             awaitText("Experimentar demonstração")
             instrumentation.sendKeyDownUpSync(KeyEvent.KEYCODE_BACK)
-            awaitText("Lembretes pelo WhatsApp")
+            awaitText("💬 Lembretes pelo WhatsApp")
         }
     }
 

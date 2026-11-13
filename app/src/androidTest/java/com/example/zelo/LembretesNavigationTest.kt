@@ -26,11 +26,11 @@ class LembretesNavigationTest {
             click("Ver lembretes")
             awaitText(demo)
             click("Perfil")
-            click("Lembretes pelo WhatsApp")
+            click("💬 Lembretes pelo WhatsApp")
             awaitText("Lembretes pelo WhatsApp")
             awaitText("Experimentar demonstração")
             instrumentation.sendKeyDownUpSync(KeyEvent.KEYCODE_BACK)
-            awaitText("Lembretes pelo WhatsApp")
+            awaitText("💬 Lembretes pelo WhatsApp")
             click("Início")
             awaitText("Ações rápidas")
         }

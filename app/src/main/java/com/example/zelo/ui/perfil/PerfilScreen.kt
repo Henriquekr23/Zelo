@@ -448,13 +448,8 @@ private fun SecaoPreferencias(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Column(Modifier.weight(1f)) {
-                    Text("Lembretes pelo WhatsApp", fontWeight = FontWeight.Medium)
-                    Text("Conheça a funcionalidade", style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-                Text("›", style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.primary)
+                Text(text = "💬 Lembretes pelo WhatsApp", fontWeight = FontWeight.Medium)
+                Text(text = ">", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
 
             Divider(color = OutlineVariant, thickness = 1.dp)
@@ -482,13 +477,8 @@ private fun SecaoPreferencias(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Column(Modifier.weight(1f)) {
-                    Text("Minha clínica", fontWeight = FontWeight.Medium)
-                    Text("Clínica Jardim • Demonstração", style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-                Text("›", style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.primary)
+                Text(text = "🏥 Minha clínica", fontWeight = FontWeight.Medium)
+                Text(text = ">", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }

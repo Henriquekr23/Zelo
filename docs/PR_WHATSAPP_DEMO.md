@@ -11,6 +11,8 @@ Este PR mantém a base **feat/whatsapp-sqlite-integration** (PR #28), contendo s
 - **Perfil → Minha clínica**: Clínica Jardim Veterinária fictícia, endereço/serviços/horários ilustrativos e mapa nativo Canvas.
 - **Simular trajeto / Ocultar trajeto**: origem, caminho, distância e duração fictícios, inteiramente dentro do aplicativo.
 
+As opções **💬 Lembretes pelo WhatsApp** e **🏥 Minha clínica** seguem o mesmo padrão compacto de Tema do aplicativo e Histórico clínico completo: uma linha, emoji, espaçamento uniforme e indicador de navegação discreto, sem subtítulos.
+
 O formulário técnico do piloto foi preservado em WhatsAppPilotScreen.kt, sem acesso no fluxo acadêmico. O ViewModel e os serviços reais continuam no projeto.
 
 ## Cenários e regras preservados
@@ -47,6 +49,8 @@ Nenhuma dependência adicionada.
 Emulador: Medium_Phone_2, Android 16/API 36. Inspeção visual realizada no perfil, introdução, mapa/trajeto, conversa, respostas e agenda.
 Novos testes cobrem clínica, navegação de retorno, ausência de campos técnicos, reinício de sessão e rolagem automática sem intervenção.
 Os testes existentes continuam ativos; foram corrigidos o contexto do diretório temporário do journal e a busca/sincronização de nós virtuais Compose.
+
+No ajuste posterior das linhas de Preferências, os APKs de aplicativo e de testes foram recompilados e os três testes de navegação de lembretes/clínica foram executados novamente, todos aprovados. O alinhamento visual das quatro opções foi conferido no emulador com o tema Azul.
 
 O emulador inicialmente congelou a renderização e perdeu o foco da janela. Um reinício sem snapshot com renderização por software permitiu executar a validação, sem alterações de produção para contornar o ambiente.
 
