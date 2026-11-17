@@ -32,7 +32,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+//import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.example.zelo.model.Pet
 import com.example.zelo.ui.historico.HistoricoScreen
 import com.example.zelo.ui.home.InicioScreen
@@ -46,9 +46,15 @@ import com.example.zelo.viewmodel.InicioViewModel
 import com.example.zelo.viewmodel.LembretesViewModel
 import com.example.zelo.viewmodel.PetsViewModel
 import com.example.zelo.viewmodel.TutorViewModel
+import com.example.zelo.data.repository.AppColorTheme
 import kotlinx.coroutines.delay
+import android.content.Context
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 
-class MainActivity : ComponentActivity() {
+class MainActivity : ComponentActivity(), SensorEventListener {
 
     private val appThemeViewModel: AppThemeViewModel by viewModels()
     private val viewModel: InicioViewModel by viewModels()
@@ -67,11 +73,19 @@ class MainActivity : ComponentActivity() {
 
     private var splashVisivel by mutableStateOf(false)
 
+    private lateinit var sensorManager: SensorManager
+
+    private var lightSensor: Sensor? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
 
-        installSplashScreen()
+      //  installSplashScreen()
 
         super.onCreate(savedInstanceState)
+
+        sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
+
+        lightSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT)
 
         splashVisivel =
             savedInstanceState == null &&
@@ -462,4 +476,33 @@ class MainActivity : ComponentActivity() {
             _telaAtual.value = it
         }
     }
+
+    override fun onResume() {
+        super.onResume()
+        lightSensor?.let {
+            sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL)
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        sensorManager.unregisterListener(this)
+    }
+
+    override fun onSensorChanged(event: SensorEvent?) {
+        if (event?.sensor?.type == Sensor.TYPE_LIGHT) {
+            val lux = event.values[0]
+
+            if (lux < 50f) {
+                appThemeViewModel.selecionarTema(AppColorTheme.AZUL)
+            } else {
+                appThemeViewModel.selecionarTema(AppColorTheme.ORIGINAL)
+            }
+        }
+    }
+
+    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
+        //NÃO NECESSÁRIA NO MOMENTO
+    }
+
 }

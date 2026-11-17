@@ -20,6 +20,9 @@ import androidx.compose.ui.unit.sp
 import com.example.zelo.model.Pet
 import com.example.zelo.ui.theme.*
 import com.example.zelo.data.repository.AppColorTheme
+import android.content.Intent
+import androidx.compose.ui.platform.LocalContext
+import com.example.zelo.MapaClinicaActivity
 
 @Composable
 fun PerfilScreen(
@@ -480,6 +483,24 @@ private fun SecaoPreferencias(
                 Text(text = "🏥 Minha clínica", fontWeight = FontWeight.Medium)
                 Text(text = ">", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
+            Divider(color = OutlineVariant, thickness = 1.dp)
+
+            // NOVO BOTÃO DO MAPA
+            val context = LocalContext.current
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        context.startActivity(Intent(context, MapaClinicaActivity::class.java))
+                    }
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(text = "📍 Localização no Mapa", fontWeight = FontWeight.Medium)
+                Text(text = ">", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+
         }
     }
 }
